@@ -92,7 +92,7 @@ def run_materiality_agent(state: AgentState) -> AgentState:
     state["current_step"] = "materiality"
 
     llm = ChatOllama(
-        model=os.getenv("OLLAMA_MODEL", "mistral:7b-instruct"),
+        model=os.getenv("OLLAMA_MODEL", "qwen2.5:3b"),
         base_url=os.getenv("OLLAMA_BASE_URL", "http://localhost:11434"),
         temperature=0.1,
     )
