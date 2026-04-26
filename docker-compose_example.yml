@@ -1,0 +1,71 @@
+version: "3.9"
+
+services:
+  # ─── Local LLM Server ───────────────────────────────────────────────────────
+  ollama:
+    image: ollama/ollama:latest
+    container_name: esg_ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama:/root/.ollama
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      # test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 30s
+    restart: unless-stopped
+
+  # ─── ESG Agent Backend (FastAPI) ────────────────────────────────────────────
+  esg-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: esg_backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./reports:/app/reports
+      - ./data:/app/data
+      - ./config:/app/config
+    environment:
+      - OLLAMA_BASE_URL=http://ollama:11434 # your ollama url
+      - OLLAMA_MODEL=qwen2.5:3b # your llm model 
+      - OLLAMA_EMBED_MODEL=nomic-embed-text:latest
+      - SERPAPI_KEY=1ede219d1145b668461a5c64ff38be8e76cbe92c639900ab2ebab2723dff3990 # api find it on serpapi.com
+      - NASA_API_KEY=N4XoDTq9UTVqVnbc8hNcgb69k1hTCMI3XYe56uKL  # api find it on nasa api portal
+      - REPORTS_DIR=/app/reports
+    # depends_on:
+    #   ollama:
+    #     condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ─── Streamlit UI ───────────────────────────────────────────────────────────
+  esg-ui:
+    build:
+      context: .
+      dockerfile: Dockerfile.ui
+    container_name: esg_ui
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./reports:/app/reports
+    environment:
+      - BACKEND_URL=http://esg-backend:8000
+    # depends_on:
+    #   esg-backend:
+    #     condition: service_healthy
+    # restart: unless-stopped
+
+volumes:
+  ollama:
+    external: true  #only as i am taking llms from another container

@@ -1,0 +1,53 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# System deps — install Playwright's Chromium dependencies manually
+# (avoids font package name breakage on Debian Trixie)
+RUN apt-get update && apt-get install -y \
+    curl \
+    wget \
+    gcc \
+    g++ \
+    libpq-dev \
+    poppler-utils \
+    fonts-liberation \
+    fonts-unifont \
+    # Chromium runtime deps
+    libnss3 \
+    libnspr4 \
+    libatk1.0-0 \
+    libatk-bridge2.0-0 \
+    libcups2 \
+    libdrm2 \
+    libdbus-1-3 \
+    libxkbcommon0 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxfixes3 \
+    libxrandr2 \
+    libgbm1 \
+    libasound2 \
+    libpango-1.0-0 \
+    libcairo2 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies
+COPY requirements.backend.txt .
+RUN pip install --no-cache-dir -r requirements.backend.txt
+
+# Install Playwright's Chromium binary only (skip --with-deps, handled above)
+RUN playwright install chromium
+
+# Copy app source
+COPY agents/     ./agents/
+COPY tools/      ./tools/
+COPY frameworks/ ./frameworks/
+COPY config/     ./config/
+COPY main.py     .
+
+RUN mkdir -p /app/reports /app/data
+
+EXPOSE 8000
+
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]

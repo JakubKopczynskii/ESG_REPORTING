@@ -14,6 +14,14 @@ import streamlit as st
 
 BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
 
+def _backend_healthy() -> bool:
+    """Check if the backend is reachable (server-side call)."""
+    try:
+        r = httpx.get(f"{BACKEND_URL}/health", timeout=3.0)
+        return r.status_code == 200
+    except Exception:
+        return False
+
 # ─── Page config ─────────────────────────────────────────────────────────────
 st.set_page_config(
     page_title="ESG Integrity Auditor",
@@ -194,9 +202,18 @@ def risk_color(risk: str) -> str:
 
 def api_post(path: str, **kwargs):
     try:
-        r = httpx.post(f"{BACKEND_URL}{path}", timeout=30, **kwargs)
+        r = httpx.post(f"{BACKEND_URL}{path}", timeout=60, **kwargs)
         r.raise_for_status()
         return r.json()
+    except httpx.ConnectError:
+        st.error(
+            f"❌ Cannot reach the backend at **{BACKEND_URL}**\n\n"
+            "**Troubleshooting:**\n"
+            "- Run `docker compose ps` — is `esg-backend` healthy?\n"
+            "- Run `docker compose logs esg-backend` for errors\n"
+            "- Wait 30s after `docker compose up` for Ollama model to load"
+        )
+        return None
     except Exception as e:
         st.error(f"API error: {e}")
         return None
@@ -206,7 +223,7 @@ def api_get(path: str):
         r = httpx.get(f"{BACKEND_URL}{path}", timeout=10)
         r.raise_for_status()
         return r.json()
-    except Exception as e:
+    except Exception:
         return None
 
 
@@ -252,7 +269,7 @@ with st.sidebar:
     """, unsafe_allow_html=True)
 
     st.markdown("### Navigation")
-    page = st.radio("", ["🔍 New Audit", "📊 Results Dashboard", "📋 Job History"],
+    page = st.radio("Navigate", ["🔍 New Audit", "📊 Results Dashboard", "📋 Job History"],
                     label_visibility="collapsed")
 
     st.markdown("---")
@@ -282,6 +299,15 @@ with st.sidebar:
     """, unsafe_allow_html=True)
 
 
+# ─── Backend status banner ────────────────────────────────────────────────────
+if not _backend_healthy():
+    st.warning(
+        "⚠️ **Backend not reachable** — the ESG agent service is unavailable.  \n"
+        f"Trying: `{BACKEND_URL}`  \n\n"
+        "**To fix:** run `docker compose up` in your project folder, then wait ~30 seconds for Ollama to load.",
+        icon="🔌",
+    )
+
 # ─── Page: New Audit ──────────────────────────────────────────────────────────
 
 if "🔍 New Audit" in page:
@@ -293,9 +319,13 @@ if "🔍 New Audit" in page:
     with col_left:
         tab_paste, tab_upload = st.tabs(["✏️ Paste Report Text", "📁 Upload PDF / TXT"])
 
+        sample_text = st.session_state.get("sample_text", "")
+
         with tab_paste:
             report_text = st.text_area(
                 "Sustainability report content",
+                value=sample_text,
+                key="report_text",
                 height=340,
                 placeholder="Paste the full text of the corporate sustainability / ESG report here...\n\nThe longer and more complete the report, the more accurate the analysis.",
                 label_visibility="collapsed",
