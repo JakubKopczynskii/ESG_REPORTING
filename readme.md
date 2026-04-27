@@ -11,10 +11,10 @@
 
 ```bash
 # 1. Navigate to project
-cd "C:\Users\jakub\Documents\python projects\ESG_REPORTING"
+cd /Users/kuba/Documents/Aggregation_of_things/python_personal/ESG_REPORTING
 
 # 2. Create environment configuration
-copy env.example .env
+cp env.example .env
 
 # 3. Create Docker volume for LLM models
 docker volume create ollama
@@ -96,7 +96,7 @@ Fetches real satellite data (NASA FIRMS, NOAA GML) and compares against company 
 Combines results from all agents, computes weighted ESG Integrity Score, generates executive summary and recommendations.
 
 ### 5. PDF Generator
-Creates professional, downloadable PDF scorecard with charts, evidence, and recommendations.
+Creates professional, McKinsey-quality PDF scorecard with clean layout, color-coded grades, evidence tables, and recommendations. Includes header attribution and guaranteed no-overlap design.
 
 ---
 
@@ -238,9 +238,11 @@ ESG_REPORTING/
 | Method | Endpoint | Purpose |
 |--------|----------|---------|
 | GET | `/health` | Check if backend is running |
-| POST | `/audit/start` | Start a new audit |
+| POST | `/audit/start` | Start audit with text input |
+| POST | `/audit/upload` | Start audit by uploading PDF/TXT file |
 | GET | `/audit/{job_id}` | Poll audit status & results |
 | GET | `/report/{job_id}` | Download PDF report |
+| GET | `/jobs` | List recent audit jobs |
 
 Full API docs: http://localhost:8000/docs
 

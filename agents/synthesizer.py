@@ -92,7 +92,7 @@ SCORES: Materiality={scores['materiality']}/100, Controversies={scores['controve
 
 MISSING DISCLOSURES (topics): {', '.join(missing_topics) or 'None'}
 CONTROVERSIES FOUND: {', '.join(controversy_titles) or 'None'}
-SCIENTIFIC DISCREPANCIES: {'; '.join(discrepancies) or 'None found'}
+SCIENTIFIC DISCREPANCIES: {'; '.join(filter(None, discrepancies)) or 'None found'}
 
 Generate an ESG integrity assessment. Return JSON only."""
 

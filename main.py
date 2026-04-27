@@ -9,10 +9,11 @@ Endpoints:
 """
 
 import asyncio
+import io
 import os
 import uuid
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
@@ -53,16 +54,32 @@ class AuditRequest(BaseModel):
 def _run_in_thread(
     job_id: str,
     company_name: str,
-    report_text: str,
+    raw_content: bytes,
+    filename: str,
     report_year: str,
     industry_sector: str,
 ):
     """Execute the LangGraph pipeline in a background thread."""
     try:
         _jobs[job_id]["status"] = "running"
+        
+        # 1. Parse the PDF in the background thread
+        text = ""
+        if filename.endswith(".pdf"):
+            import pdfplumber
+            with pdfplumber.open(io.BytesIO(raw_content)) as pdf:
+                for page in pdf.pages:
+                    text += (page.extract_text() or "") + "\n"
+        else:
+            text = raw_content.decode("utf-8", errors="ignore")
+
+        if len(text.strip()) < 100:
+            raise ValueError("Report text too short or empty")
+
+        # 2. Run the audit pipeline
         result = run_audit(
             company_name=company_name,
-            report_text=report_text,
+            report_text=text,
             report_year=report_year,
             industry_sector=industry_sector,
         )
@@ -70,7 +87,7 @@ def _run_in_thread(
         _jobs[job_id]["scorecard"] = result.get("scorecard")
         _jobs[job_id]["pdf_path"] = result.get("pdf_path")
         _jobs[job_id]["errors"] = result.get("errors", [])
-        _jobs[job_id]["completed_at"] = datetime.utcnow().isoformat()
+        _jobs[job_id]["completed_at"] = datetime.now(timezone.utc).isoformat()
     except Exception as e:
         _jobs[job_id]["status"] = "failed"
         _jobs[job_id]["error"] = str(e)
@@ -78,7 +95,7 @@ def _run_in_thread(
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "timestamp": datetime.utcnow().isoformat()}
+    return {"status": "ok", "timestamp": datetime.now(timezone.utc).isoformat()}
 
 
 @app.post("/audit/start")
@@ -89,21 +106,24 @@ async def start_audit(request: AuditRequest):
         "job_id": job_id,
         "status": "queued",
         "company_name": request.company_name,
-        "created_at": datetime.utcnow().isoformat(),
+        "created_at": datetime.now(timezone.utc).isoformat(),
         "scorecard": None,
         "pdf_path": None,
         "errors": [],
     }
 
     loop = asyncio.get_running_loop()
-    loop.run_in_executor(
-        _executor,
-        _run_in_thread,
-        job_id,
-        request.company_name,
-        request.report_text,
-        request.report_year,
-        request.industry_sector,
+    asyncio.create_task(
+        loop.run_in_executor(
+            _executor,
+            _run_in_thread,
+            job_id,
+            request.company_name,
+            request.report_text.encode("utf-8"),
+            "text.txt",
+            request.report_year,
+            request.industry_sector,
+        )
     )
 
     return {"job_id": job_id, "status": "queued"}
@@ -117,39 +137,31 @@ async def start_audit_with_file(
     file: UploadFile = File(...),
 ):
     """Start an audit by uploading a PDF or TXT sustainability report."""
-    content = await file.read()
-
-    # Extract text from PDF
-    if file.filename.endswith(".pdf"):
-        try:
-            import pdfplumber
-            import io
-            text = ""
-            with pdfplumber.open(io.BytesIO(content)) as pdf:
-                for page in pdf.pages:
-                    text += (page.extract_text() or "") + "\n"
-        except Exception as e:
-            raise HTTPException(400, f"Could not parse PDF: {e}")
-    else:
-        text = content.decode("utf-8", errors="ignore")
-
-    if len(text.strip()) < 100:
-        raise HTTPException(400, "Report text too short or empty")
+    content = await file.read()  # Just read the bytes, don't parse yet
 
     job_id = str(uuid.uuid4())
     _jobs[job_id] = {
         "job_id": job_id,
         "status": "queued",
         "company_name": company_name,
-        "created_at": datetime.utcnow().isoformat(),
+        "created_at": datetime.now(timezone.utc).isoformat(),
         "scorecard": None,
         "pdf_path": None,
         "errors": [],
     }
 
     loop = asyncio.get_running_loop()
-    loop.run_in_executor(
-        _executor, _run_in_thread, job_id, company_name, text, report_year, industry_sector
+    asyncio.create_task(
+        loop.run_in_executor(
+            _executor,
+            _run_in_thread,
+            job_id,
+            company_name,
+            content,
+            file.filename,
+            report_year,
+            industry_sector,
+        )
     )
 
     return {"job_id": job_id, "status": "queued"}

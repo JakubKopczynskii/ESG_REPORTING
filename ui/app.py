@@ -386,7 +386,7 @@ if "🔍 New Audit" in page:
                 }
                 try:
                     r = httpx.post(f"{BACKEND_URL}/audit/upload",
-                                   data=data, files=files, timeout=30)
+                                   data=data, files=files, timeout=120)
                     r.raise_for_status()
                     result = r.json()
                 except Exception as e:
