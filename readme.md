@@ -6,6 +6,21 @@
 > Five specialized AI agents audit corporate sustainability reports against SASB/GRI frameworks, real-time news, and NASA/ESA satellite data.
 
 ---
+## Example Results
+
+## Score Overview
+<img width="1316" height="630" alt="image" src="https://github.com/user-attachments/assets/ca30ab4c-4f28-4431-af69-ffc83d9f0980" />
+
+## Automated Capture of Controversies
+<img width="1286" height="476" alt="image" src="https://github.com/user-attachments/assets/2b2ac7cf-022c-4ca4-be3a-bfb1c39d1caa" />
+
+## Automated Recommendations
+<img width="1285" height="233" alt="image" src="https://github.com/user-attachments/assets/3b7b0059-ef26-440a-bc94-58e7ccfb59e3" />
+
+
+
+
+
 
 ## 🚀 Quick Start (2 minutes)
 
