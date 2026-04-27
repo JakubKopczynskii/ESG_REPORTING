@@ -144,7 +144,7 @@ def run_scientific_verifier(state: AgentState) -> AgentState:
 
     report_text = state["report_text"]
     llm = ChatOllama(
-        model=os.getenv("OLLAMA_MODEL", "mistral:7b-instruct"),
+        model=os.getenv("OLLAMA_MODEL", "qwen2:1.5b"),
         base_url=os.getenv("OLLAMA_BASE_URL", "http://localhost:11434"),
         temperature=0.0,
     )

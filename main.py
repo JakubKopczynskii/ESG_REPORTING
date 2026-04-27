@@ -50,11 +50,22 @@ class AuditRequest(BaseModel):
     industry_sector: str = "General"
 
 
-def _run_in_thread(job_id: str, **kwargs):
+def _run_in_thread(
+    job_id: str,
+    company_name: str,
+    report_text: str,
+    report_year: str,
+    industry_sector: str,
+):
     """Execute the LangGraph pipeline in a background thread."""
     try:
         _jobs[job_id]["status"] = "running"
-        result = run_audit(**kwargs)
+        result = run_audit(
+            company_name=company_name,
+            report_text=report_text,
+            report_year=report_year,
+            industry_sector=industry_sector,
+        )
         _jobs[job_id]["status"] = "completed"
         _jobs[job_id]["scorecard"] = result.get("scorecard")
         _jobs[job_id]["pdf_path"] = result.get("pdf_path")
@@ -84,7 +95,7 @@ async def start_audit(request: AuditRequest):
         "errors": [],
     }
 
-    loop = asyncio.get_event_loop()
+    loop = asyncio.get_running_loop()
     loop.run_in_executor(
         _executor,
         _run_in_thread,
@@ -136,7 +147,7 @@ async def start_audit_with_file(
         "errors": [],
     }
 
-    loop = asyncio.get_event_loop()
+    loop = asyncio.get_running_loop()
     loop.run_in_executor(
         _executor, _run_in_thread, job_id, company_name, text, report_year, industry_sector
     )
