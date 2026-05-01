@@ -47,7 +47,7 @@ _executor = ThreadPoolExecutor(max_workers=2)
 class AuditRequest(BaseModel):
     company_name: str
     report_text: str
-    report_year: str = "2024"
+    report_year: str = "5"
     industry_sector: str = "General"
 
 
@@ -113,17 +113,15 @@ async def start_audit(request: AuditRequest):
     }
 
     loop = asyncio.get_running_loop()
-    asyncio.create_task(
-        loop.run_in_executor(
-            _executor,
-            _run_in_thread,
-            job_id,
-            request.company_name,
-            request.report_text.encode("utf-8"),
-            "text.txt",
-            request.report_year,
-            request.industry_sector,
-        )
+    loop.run_in_executor(
+        _executor,
+        _run_in_thread,
+        job_id,
+        request.company_name,
+        request.report_text.encode("utf-8"),
+        "text.txt",
+        request.report_year,
+        request.industry_sector,
     )
 
     return {"job_id": job_id, "status": "queued"}
@@ -132,12 +130,13 @@ async def start_audit(request: AuditRequest):
 @app.post("/audit/upload")
 async def start_audit_with_file(
     company_name: str = Form(...),
-    report_year: str = Form("2024"),
+    report_year: str = Form("2025"),
     industry_sector: str = Form("General"),
     file: UploadFile = File(...),
 ):
     """Start an audit by uploading a PDF or TXT sustainability report."""
     content = await file.read()  # Just read the bytes, don't parse yet
+    filename = str(file.filename or "uploaded_report")
 
     job_id = str(uuid.uuid4())
     _jobs[job_id] = {
@@ -151,17 +150,15 @@ async def start_audit_with_file(
     }
 
     loop = asyncio.get_running_loop()
-    asyncio.create_task(
-        loop.run_in_executor(
-            _executor,
-            _run_in_thread,
-            job_id,
-            company_name,
-            content,
-            file.filename,
-            report_year,
-            industry_sector,
-        )
+    loop.run_in_executor(
+        _executor,
+        _run_in_thread,
+        job_id,
+        company_name,
+        content,
+        filename,
+        report_year,
+        industry_sector,
     )
 
     return {"job_id": job_id, "status": "queued"}
@@ -181,14 +178,20 @@ def get_audit_status(job_id: str):
         "created_at": job["created_at"],
         "completed_at": job.get("completed_at"),
         "errors": job.get("errors", []),
+        "pdf_path": job.get("pdf_path"),
+        "has_pdf": bool(job.get("pdf_path")),
     }
 
     if job["status"] == "completed" and job.get("scorecard"):
         response["scorecard"] = job["scorecard"]
-        response["has_pdf"] = bool(job.get("pdf_path"))
 
     if job["status"] == "failed":
         response["error"] = job.get("error", "Unknown error")
+
+    if job.get("errors"):
+        response["pdf_error"] = next(
+            (err for err in job["errors"] if "PDF generation failed" in err), None
+        )
 
     return response
 

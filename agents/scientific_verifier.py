@@ -20,6 +20,8 @@ import httpx
 from langchain_ollama import ChatOllama
 from langchain_core.messages import HumanMessage, SystemMessage
 
+from agents.synthesizer import _normalize_llm_response
+
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from agents.state import AgentState, ScientificDataPoint, EvidenceItem
 
@@ -125,7 +127,7 @@ Compare these values. Is there a meaningful discrepancy? Return JSON only."""
     ]
     try:
         resp = llm.invoke(messages)
-        raw = re.sub(r"```json\s*|\s*```", "", resp.content.strip()).strip()
+        raw = re.sub(r"```json\s*|\s*```", "", _normalize_llm_response(resp).strip()).strip()
         return json.loads(raw)
     except Exception:
         return {

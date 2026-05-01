@@ -22,6 +22,17 @@
 
 
 
+## ✨ What’s New
+
+- Added direct integrity contradiction detection by cross-referencing report claims with real-time news sources.
+- Added a verifiable evidence trail in the audit output and generated PDF, showing source, category, and excerpt for each evidence item.
+- Improved PDF generation resilience so missing recommendation or optional scorecard fields no longer crash the audit.
+- Exposed richer audit metadata from the backend: `pdf_path`, `has_pdf`, and `pdf_error`.
+- Live-mounted the Streamlit UI source in Docker for hot reload during development.
+- Added support for newer report years such as `2025`.
+
+---
+
 ## 🚀 Quick Start (2 minutes)
 
 ```bash
@@ -108,10 +119,10 @@ Searches for ESG controversies and flags (using DuckDuckGo or SerpAPI). Classifi
 Fetches real satellite data (NASA FIRMS, NOAA GML) and compares against company claims. Detects greenwashing through data discrepancies.
 
 ### 4. Synthesizer
-Combines results from all agents, computes weighted ESG Integrity Score, generates executive summary and recommendations.
+Combines results from all agents, computes weighted ESG Integrity Score, generates executive summary and recommendations, and performs direct contradiction detection between report claims and real-time news.
 
 ### 5. PDF Generator
-Creates professional, McKinsey-quality PDF scorecard with clean layout, color-coded grades, evidence tables, and recommendations. Includes header attribution and guaranteed no-overlap design.
+Creates professional, McKinsey-quality PDF scorecard with clean layout, color-coded grades, evidence tables, recommendations, and a full evidence trail for verifiability. Includes header attribution and guaranteed no-overlap design.
 
 ---
 

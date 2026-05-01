@@ -1,0 +1,399 @@
+ Image esg_reporting-esg-backend Building 
+ Image esg_reporting-esg-ui Building 
+#1 [internal] load local bake definitions
+#1 reading from stdin 1.16kB done
+#1 DONE 0.0s
+
+#2 [esg-ui internal] load build definition from Dockerfile.ui
+#2 transferring dockerfile: 409B 0.0s done
+#2 DONE 0.0s
+
+#3 [esg-backend internal] load build definition from Dockerfile.backend
+#3 transferring dockerfile: 1.23kB 0.0s done
+#3 DONE 0.0s
+
+#4 [esg-backend internal] load metadata for docker.io/library/python:3.11-slim
+#4 DONE 0.5s
+
+#5 [esg-backend internal] load .dockerignore
+#5 transferring context: 2B done
+#5 DONE 0.0s
+
+#6 [esg-ui 1/7] FROM docker.io/library/python:3.11-slim@sha256:6d85378d88a19cd4d76079817532d62232be95757cb45945a99fec8e8084b9c2
+#6 resolve docker.io/library/python:3.11-slim@sha256:6d85378d88a19cd4d76079817532d62232be95757cb45945a99fec8e8084b9c2 0.0s done
+#6 DONE 0.1s
+
+#7 [esg-ui internal] load build context
+#7 transferring context: 267B 0.0s done
+#7 DONE 0.0s
+
+#8 [esg-backend internal] load build context
+#8 transferring context: 1.89kB 0.0s done
+#8 DONE 0.0s
+
+#9 [esg-ui 5/7] RUN pip install --no-cache-dir -r requirements.ui.txt
+#9 CACHED
+
+#10 [esg-ui 4/7] COPY requirements.ui.txt .
+#10 CACHED
+
+#11 [esg-ui 6/7] COPY ui/ ./ui/
+#11 CACHED
+
+#12 [esg-ui 3/7] RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+#12 CACHED
+
+#13 [esg-backend  7/12] COPY agents/     ./agents/
+#13 CACHED
+
+#14 [esg-backend  3/12] RUN apt-get update && apt-get install -y     curl     wget     gcc     g++     libpq-dev     poppler-utils     fonts-liberation     fonts-unifont     libnss3     libnspr4     libatk1.0-0     libatk-bridge2.0-0     libcups2     libdrm2     libdbus-1-3     libxkbcommon0     libxcomposite1     libxdamage1     libxfixes3     libxrandr2     libgbm1     libasound2     libpango-1.0-0     libcairo2     && rm -rf /var/lib/apt/lists/*
+#14 CACHED
+
+#15 [esg-backend  8/12] COPY tools/      ./tools/
+#15 CACHED
+
+#16 [esg-backend  4/12] COPY requirements.backend.txt .
+#16 CACHED
+
+#17 [esg-backend  9/12] COPY frameworks/ ./frameworks/
+#17 CACHED
+
+#18 [esg-backend 10/12] COPY config/     ./config/
+#18 CACHED
+
+#19 [esg-backend 2/7] WORKDIR /app
+#19 CACHED
+
+#20 [esg-backend  6/12] RUN playwright install chromium
+#20 CACHED
+
+#21 [esg-backend  5/12] RUN pip install --no-cache-dir -r requirements.backend.txt
+#21 CACHED
+
+#22 [esg-backend 11/12] COPY main.py     .
+#22 CACHED
+
+#23 [esg-ui 7/7] RUN mkdir -p /app/reports
+#23 CACHED
+
+#24 [esg-backend 12/12] RUN mkdir -p /app/reports /app/data
+#24 CACHED
+
+#25 [esg-ui] exporting to image
+#25 exporting layers 0.0s done
+#25 exporting manifest sha256:698e91fddf99cce736950fe265410909a8a02e39306d3bfdc110f08951c20a12 done
+#25 exporting config sha256:6899559ac069eb2612712692e1b833564b2e01566357e7e7303840a6a8daf629 done
+#25 exporting attestation manifest sha256:9bf13d3e54ee396ba69b1ec3876552b697d1925c5a09f0caf7d7b2f84efe5cba 0.1s done
+#25 exporting manifest list sha256:63c1d06e608ac000c8beb8fcc05203b97497b0d58f44235b2bb32a39a6c54f2a
+#25 exporting manifest list sha256:63c1d06e608ac000c8beb8fcc05203b97497b0d58f44235b2bb32a39a6c54f2a 0.0s done
+#25 naming to docker.io/library/esg_reporting-esg-ui:latest 0.0s done
+#25 unpacking to docker.io/library/esg_reporting-esg-ui:latest 0.1s done
+#25 DONE 0.4s
+
+#26 [esg-backend] exporting to image
+#26 exporting layers 0.3s done
+#26 exporting manifest sha256:3b4c0fb1e8b276eaf4d208fe8f4b303fef057d9fb01a82386d593f0f22cc1e95 0.0s done
+#26 exporting config sha256:e337555ab7549c56c53cacaf20af7aeb5cfd938492bd10a7e3c5d33382331658 0.0s done
+#26 exporting attestation manifest sha256:7cdc6bc64231cc7a4f4375e7f4cfb05748a1701af41fbd016f2f32b9ac33b1b2 0.0s done
+#26 exporting manifest list sha256:fe3aa4862ef9f8d72fc55d868afeedc944d45c253a6896624f0359fb6cc1533e
+#26 exporting manifest list sha256:fe3aa4862ef9f8d72fc55d868afeedc944d45c253a6896624f0359fb6cc1533e 0.0s done
+#26 naming to docker.io/library/esg_reporting-esg-backend:latest done
+#26 unpacking to docker.io/library/esg_reporting-esg-backend:latest
+#26 ...
+
+#27 [esg-ui] resolving provenance for metadata file
+#27 DONE 0.0s
+
+#26 [esg-backend] exporting to image
+#26 unpacking to docker.io/library/esg_reporting-esg-backend:latest 0.3s done
+#26 DONE 0.9s
+
+#28 [esg-backend] resolving provenance for metadata file
+#28 DONE 0.0s
+ Image esg_reporting-esg-backend Built 
+ Image esg_reporting-esg-ui Built 
+ Network esg_reporting_default Creating 
+ Network esg_reporting_default Created 
+ Container esg_ollama Creating 
+ Container esg_backend Creating 
+ Container esg_ui Creating 
+ Container esg_ollama Created 
+ Container esg_ui Created 
+ Container esg_backend Created 
+Attaching to esg_backend, esg_ollama, esg_ui
+ Container esg_backend Starting 
+ Container esg_ollama Starting 
+ Container esg_ui Starting 
+ Container esg_backend Started 
+ Container esg_ollama Started 
+ Container esg_ui Started 
+esg_ollama  | time=2026-04-29T16:11:09.489Z level=INFO source=routes.go:1752 msg="server config" env="map[CUDA_VISIBLE_DEVICES: GGML_VK_VISIBLE_DEVICES: GPU_DEVICE_ORDINAL: HIP_VISIBLE_DEVICES: HSA_OVERRIDE_GFX_VERSION: HTTPS_PROXY: HTTP_PROXY: NO_PROXY: OLLAMA_CONTEXT_LENGTH:0 OLLAMA_DEBUG:INFO OLLAMA_DEBUG_LOG_REQUESTS:false OLLAMA_EDITOR: OLLAMA_FLASH_ATTENTION:false OLLAMA_GPU_OVERHEAD:0 OLLAMA_HOST:http://0.0.0.0:11434 OLLAMA_KEEP_ALIVE:5m0s OLLAMA_KV_CACHE_TYPE: OLLAMA_LLM_LIBRARY: OLLAMA_LOAD_TIMEOUT:5m0s OLLAMA_MAX_LOADED_MODELS:0 OLLAMA_MAX_QUEUE:512 OLLAMA_MODELS:/root/.ollama/models OLLAMA_MULTIUSER_CACHE:false OLLAMA_NEW_ENGINE:false OLLAMA_NOHISTORY:false OLLAMA_NOPRUNE:false OLLAMA_NO_CLOUD:false OLLAMA_NUM_PARALLEL:1 OLLAMA_ORIGINS:[http://localhost https://localhost http://localhost:* https://localhost:* http://127.0.0.1 https://127.0.0.1 http://127.0.0.1:* https://127.0.0.1:* http://0.0.0.0 https://0.0.0.0 http://0.0.0.0:* https://0.0.0.0:* app://* file://* tauri://* vscode-webview://* vscode-file://*] OLLAMA_REMOTES:[ollama.com] OLLAMA_SCHED_SPREAD:false OLLAMA_VULKAN:false ROCR_VISIBLE_DEVICES: http_proxy: https_proxy: no_proxy:]"
+esg_ollama  | time=2026-04-29T16:11:09.491Z level=INFO source=routes.go:1754 msg="Ollama cloud disabled: false"
+esg_ollama  | time=2026-04-29T16:11:09.498Z level=INFO source=images.go:517 msg="total blobs: 5"
+esg_ollama  | time=2026-04-29T16:11:09.499Z level=INFO source=images.go:524 msg="total unused blobs removed: 0"
+esg_ollama  | time=2026-04-29T16:11:09.507Z level=INFO source=routes.go:1810 msg="Listening on [::]:11434 (version 0.21.0)"
+esg_ollama  | time=2026-04-29T16:11:09.514Z level=INFO source=runner.go:67 msg="discovering available GPUs..."
+esg_ollama  | time=2026-04-29T16:11:09.522Z level=INFO source=server.go:444 msg="starting runner" cmd="/usr/bin/ollama runner --ollama-engine --port 38483"
+esg_ollama  | time=2026-04-29T16:11:09.789Z level=INFO source=server.go:444 msg="starting runner" cmd="/usr/bin/ollama runner --ollama-engine --port 41189"
+esg_ollama  | time=2026-04-29T16:11:09.958Z level=INFO source=runner.go:106 msg="experimental Vulkan support disabled.  To enable, set OLLAMA_VULKAN=1"
+esg_ollama  | time=2026-04-29T16:11:09.962Z level=INFO source=types.go:60 msg="inference compute" id=cpu library=cpu compute="" name=cpu description=cpu libdirs=ollama driver="" pci_id="" type="" total="3.8 GiB" available="3.8 GiB"
+esg_ollama  | time=2026-04-29T16:11:09.962Z level=INFO source=routes.go:1860 msg="vram-based default context" total_vram="0 B" default_num_ctx=4096
+esg_ui      | 
+esg_ui      | Collecting usage statistics. To deactivate, set browser.gatherUsageStats to false.
+esg_ui      | 
+esg_ui      | 
+esg_ui      |   You can now view your Streamlit app in your browser.
+esg_ui      | 
+esg_ui      |   URL: http://0.0.0.0:8501
+esg_ui      | 
+esg_backend  | /usr/local/lib/python3.11/site-packages/requests/__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.4.3)/charset_normalizer (3.4.7) doesn't match a supported version!
+esg_backend  |   warnings.warn(
+esg_backend  | INFO:     Started server process [1]
+esg_backend  | INFO:     Waiting for application startup.
+esg_backend  | INFO:     Application startup complete.
+esg_backend  | INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+esg_ollama   | time=2026-04-29T16:11:59.630Z level=WARN source=types.go:977 msg="invalid option provided" option=mirostat
+esg_ollama   | time=2026-04-29T16:11:59.634Z level=WARN source=types.go:977 msg="invalid option provided" option=mirostat_tau
+esg_ollama   | time=2026-04-29T16:11:59.634Z level=WARN source=types.go:977 msg="invalid option provided" option=tfs_z
+esg_ollama   | time=2026-04-29T16:11:59.634Z level=WARN source=types.go:977 msg="invalid option provided" option=mirostat_eta
+esg_ollama   | time=2026-04-29T16:11:59.706Z level=WARN source=cpu_linux.go:130 msg="failed to parse CPU allowed micro secs" error="strconv.ParseInt: parsing \"max\": invalid syntax"
+esg_ollama   | llama_model_loader: loaded meta data with 21 key-value pairs and 338 tensors from /root/.ollama/models/blobs/sha256-405b56374e02b21122ae1469db646be0617c02928fd78e246723ebbb98dbca3e (version GGUF V3 (latest))
+esg_ollama   | llama_model_loader: Dumping metadata keys/values. Note: KV overrides do not apply in this output.
+esg_ollama   | llama_model_loader: - kv   0:                       general.architecture str              = qwen2
+esg_ollama   | llama_model_loader: - kv   1:                               general.name str              = Qwen2-1.5B-Instruct
+esg_ollama   | llama_model_loader: - kv   2:                          qwen2.block_count u32              = 28
+esg_ollama   | llama_model_loader: - kv   3:                       qwen2.context_length u32              = 32768
+esg_ollama   | llama_model_loader: - kv   4:                     qwen2.embedding_length u32              = 1536
+esg_ollama   | llama_model_loader: - kv   5:                  qwen2.feed_forward_length u32              = 8960
+esg_ollama   | llama_model_loader: - kv   6:                 qwen2.attention.head_count u32              = 12
+esg_ollama   | llama_model_loader: - kv   7:              qwen2.attention.head_count_kv u32              = 2
+esg_ollama   | llama_model_loader: - kv   8:                       qwen2.rope.freq_base f32              = 1000000.000000
+esg_ollama   | llama_model_loader: - kv   9:     qwen2.attention.layer_norm_rms_epsilon f32              = 0.000001
+esg_ollama   | llama_model_loader: - kv  10:                          general.file_type u32              = 2
+esg_ollama   | llama_model_loader: - kv  11:                       tokenizer.ggml.model str              = gpt2
+esg_ollama   | llama_model_loader: - kv  12:                         tokenizer.ggml.pre str              = qwen2
+esg_ollama   | llama_model_loader: - kv  13:                      tokenizer.ggml.tokens arr[str,151936]  = ["!", "\"", "#", "$", "%", "&", "'", ...
+esg_ollama   | llama_model_loader: - kv  14:                  tokenizer.ggml.token_type arr[i32,151936]  = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, ...
+esg_ollama   | llama_model_loader: - kv  15:                      tokenizer.ggml.merges arr[str,151387]  = ["Ġ Ġ", "ĠĠ ĠĠ", "i n", "Ġ t",...
+esg_ollama   | llama_model_loader: - kv  16:                tokenizer.ggml.eos_token_id u32              = 151645
+esg_ollama   | llama_model_loader: - kv  17:            tokenizer.ggml.padding_token_id u32              = 151643
+esg_ollama   | llama_model_loader: - kv  18:                tokenizer.ggml.bos_token_id u32              = 151643
+esg_ollama   | llama_model_loader: - kv  19:                    tokenizer.chat_template str              = {% for message in messages %}{% if lo...
+esg_ollama   | llama_model_loader: - kv  20:               general.quantization_version u32              = 2
+esg_ollama   | llama_model_loader: - type  f32:  141 tensors
+esg_ollama   | llama_model_loader: - type q4_0:  196 tensors
+esg_ollama   | llama_model_loader: - type q6_K:    1 tensors
+esg_ollama   | print_info: file format = GGUF V3 (latest)
+esg_ollama   | print_info: file type   = Q4_0
+esg_ollama   | print_info: file size   = 885.97 MiB (4.81 BPW) 
+esg_ollama   | load: printing all EOG tokens:
+esg_ollama   | load:   - 151643 ('<|endoftext|>')
+esg_ollama   | load:   - 151645 ('<|im_end|>')
+esg_ollama   | load: special tokens cache size = 293
+esg_ollama   | load: token to piece cache size = 0.9338 MB
+esg_ollama   | print_info: arch             = qwen2
+esg_ollama   | print_info: vocab_only       = 1
+esg_ollama   | print_info: no_alloc         = 0
+esg_ollama   | print_info: model type       = ?B
+esg_ollama   | print_info: model params     = 1.54 B
+esg_ollama   | print_info: general.name     = Qwen2-1.5B-Instruct
+esg_ollama   | print_info: vocab type       = BPE
+esg_ollama   | print_info: n_vocab          = 151936
+esg_ollama   | print_info: n_merges         = 151387
+esg_ollama   | print_info: BOS token        = 151643 '<|endoftext|>'
+esg_ollama   | print_info: EOS token        = 151645 '<|im_end|>'
+esg_ollama   | print_info: EOT token        = 151645 '<|im_end|>'
+esg_ollama   | print_info: PAD token        = 151643 '<|endoftext|>'
+esg_ollama   | print_info: LF token         = 198 'Ċ'
+esg_ollama   | print_info: EOG token        = 151643 '<|endoftext|>'
+esg_ollama   | print_info: EOG token        = 151645 '<|im_end|>'
+esg_ollama   | print_info: max token length = 256
+esg_ollama   | llama_model_load: vocab only - skipping tensors
+esg_ollama   | time=2026-04-29T16:12:01.995Z level=INFO source=server.go:444 msg="starting runner" cmd="/usr/bin/ollama runner --model /root/.ollama/models/blobs/sha256-405b56374e02b21122ae1469db646be0617c02928fd78e246723ebbb98dbca3e --port 45813"
+esg_ollama   | time=2026-04-29T16:12:01.997Z level=INFO source=sched.go:484 msg="system memory" total="3.8 GiB" free="3.8 GiB" free_swap="1024.0 MiB"
+esg_ollama   | time=2026-04-29T16:12:02.000Z level=INFO source=server.go:511 msg="loading model" "model layers"=29 requested=-1
+esg_ollama   | time=2026-04-29T16:12:02.003Z level=INFO source=device.go:245 msg="model weights" device=CPU size="886.0 MiB"
+esg_ollama   | time=2026-04-29T16:12:02.004Z level=INFO source=device.go:256 msg="kv cache" device=CPU size="112.0 MiB"
+esg_ollama   | time=2026-04-29T16:12:02.004Z level=INFO source=device.go:272 msg="total memory" size="998.0 MiB"
+esg_ollama   | time=2026-04-29T16:12:02.357Z level=INFO source=runner.go:965 msg="starting go runner"
+esg_ollama   | load_backend: loaded CPU backend from /usr/lib/ollama/libggml-cpu-haswell.so
+esg_ollama   | time=2026-04-29T16:12:02.452Z level=INFO source=ggml.go:104 msg=system CPU.0.SSE3=1 CPU.0.SSSE3=1 CPU.0.AVX=1 CPU.0.AVX2=1 CPU.0.F16C=1 CPU.0.FMA=1 CPU.0.BMI2=1 CPU.0.LLAMAFILE=1 CPU.1.LLAMAFILE=1 compiler=cgo(gcc)
+esg_ollama   | time=2026-04-29T16:12:02.520Z level=INFO source=runner.go:1001 msg="Server listening on 127.0.0.1:45813"
+esg_ollama   | time=2026-04-29T16:12:02.527Z level=INFO source=runner.go:895 msg=load request="{Operation:commit LoraPath:[] Parallel:1 BatchSize:512 FlashAttention:Auto KvSize:4096 KvCacheType: NumThreads:8 GPULayers:[] MultiUserCache:false ProjectorPath: MainGPU:0 UseMmap:false}"
+esg_ollama   | time=2026-04-29T16:12:02.528Z level=INFO source=server.go:1364 msg="waiting for llama runner to start responding"
+esg_ollama   | time=2026-04-29T16:12:02.530Z level=INFO source=server.go:1398 msg="waiting for server to become available" status="llm server loading model"
+esg_ollama   | llama_model_loader: loaded meta data with 21 key-value pairs and 338 tensors from /root/.ollama/models/blobs/sha256-405b56374e02b21122ae1469db646be0617c02928fd78e246723ebbb98dbca3e (version GGUF V3 (latest))
+esg_ollama   | llama_model_loader: Dumping metadata keys/values. Note: KV overrides do not apply in this output.
+esg_ollama   | llama_model_loader: - kv   0:                       general.architecture str              = qwen2
+esg_ollama   | llama_model_loader: - kv   1:                               general.name str              = Qwen2-1.5B-Instruct
+esg_ollama   | llama_model_loader: - kv   2:                          qwen2.block_count u32              = 28
+esg_ollama   | llama_model_loader: - kv   3:                       qwen2.context_length u32              = 32768
+esg_ollama   | llama_model_loader: - kv   4:                     qwen2.embedding_length u32              = 1536
+esg_ollama   | llama_model_loader: - kv   5:                  qwen2.feed_forward_length u32              = 8960
+esg_ollama   | llama_model_loader: - kv   6:                 qwen2.attention.head_count u32              = 12
+esg_ollama   | llama_model_loader: - kv   7:              qwen2.attention.head_count_kv u32              = 2
+esg_ollama   | llama_model_loader: - kv   8:                       qwen2.rope.freq_base f32              = 1000000.000000
+esg_ollama   | llama_model_loader: - kv   9:     qwen2.attention.layer_norm_rms_epsilon f32              = 0.000001
+esg_ollama   | llama_model_loader: - kv  10:                          general.file_type u32              = 2
+esg_ollama   | llama_model_loader: - kv  11:                       tokenizer.ggml.model str              = gpt2
+esg_ollama   | llama_model_loader: - kv  12:                         tokenizer.ggml.pre str              = qwen2
+esg_ollama   | llama_model_loader: - kv  13:                      tokenizer.ggml.tokens arr[str,151936]  = ["!", "\"", "#", "$", "%", "&", "'", ...
+esg_ollama   | llama_model_loader: - kv  14:                  tokenizer.ggml.token_type arr[i32,151936]  = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, ...
+esg_ollama   | llama_model_loader: - kv  15:                      tokenizer.ggml.merges arr[str,151387]  = ["Ġ Ġ", "ĠĠ ĠĠ", "i n", "Ġ t",...
+esg_ollama   | llama_model_loader: - kv  16:                tokenizer.ggml.eos_token_id u32              = 151645
+esg_ollama   | llama_model_loader: - kv  17:            tokenizer.ggml.padding_token_id u32              = 151643
+esg_ollama   | llama_model_loader: - kv  18:                tokenizer.ggml.bos_token_id u32              = 151643
+esg_ollama   | llama_model_loader: - kv  19:                    tokenizer.chat_template str              = {% for message in messages %}{% if lo...
+esg_ollama   | llama_model_loader: - kv  20:               general.quantization_version u32              = 2
+esg_ollama   | llama_model_loader: - type  f32:  141 tensors
+esg_ollama   | llama_model_loader: - type q4_0:  196 tensors
+esg_ollama   | llama_model_loader: - type q6_K:    1 tensors
+esg_ollama   | print_info: file format = GGUF V3 (latest)
+esg_ollama   | print_info: file type   = Q4_0
+esg_ollama   | print_info: file size   = 885.97 MiB (4.81 BPW) 
+esg_ollama   | load: printing all EOG tokens:
+esg_ollama   | load:   - 151643 ('<|endoftext|>')
+esg_ollama   | load:   - 151645 ('<|im_end|>')
+esg_ollama   | load: special tokens cache size = 293
+esg_ollama   | load: token to piece cache size = 0.9338 MB
+esg_ollama   | print_info: arch             = qwen2
+esg_ollama   | print_info: vocab_only       = 0
+esg_ollama   | print_info: no_alloc         = 0
+esg_ollama   | print_info: n_ctx_train      = 32768
+esg_ollama   | print_info: n_embd           = 1536
+esg_ollama   | print_info: n_embd_inp       = 1536
+esg_ollama   | print_info: n_layer          = 28
+esg_ollama   | print_info: n_head           = 12
+esg_ollama   | print_info: n_head_kv        = 2
+esg_ollama   | print_info: n_rot            = 128
+esg_ollama   | print_info: n_swa            = 0
+esg_ollama   | print_info: is_swa_any       = 0
+esg_ollama   | print_info: n_embd_head_k    = 128
+esg_ollama   | print_info: n_embd_head_v    = 128
+esg_ollama   | print_info: n_gqa            = 6
+esg_ollama   | print_info: n_embd_k_gqa     = 256
+esg_ollama   | print_info: n_embd_v_gqa     = 256
+esg_ollama   | print_info: f_norm_eps       = 0.0e+00
+esg_ollama   | print_info: f_norm_rms_eps   = 1.0e-06
+esg_ollama   | print_info: f_clamp_kqv      = 0.0e+00
+esg_ollama   | print_info: f_max_alibi_bias = 0.0e+00
+esg_ollama   | print_info: f_logit_scale    = 0.0e+00
+esg_ollama   | print_info: f_attn_scale     = 0.0e+00
+esg_ollama   | print_info: n_ff             = 8960
+esg_ollama   | print_info: n_expert         = 0
+esg_ollama   | print_info: n_expert_used    = 0
+esg_ollama   | print_info: n_expert_groups  = 0
+esg_ollama   | print_info: n_group_used     = 0
+esg_ollama   | print_info: causal attn      = 1
+esg_ollama   | print_info: pooling type     = -1
+esg_ollama   | print_info: rope type        = 2
+esg_ollama   | print_info: rope scaling     = linear
+esg_ollama   | print_info: freq_base_train  = 1000000.0
+esg_ollama   | print_info: freq_scale_train = 1
+esg_ollama   | print_info: n_ctx_orig_yarn  = 32768
+esg_ollama   | print_info: rope_yarn_log_mul= 0.0000
+esg_ollama   | print_info: rope_finetuned   = unknown
+esg_ollama   | print_info: model type       = 1.5B
+esg_ollama   | print_info: model params     = 1.54 B
+esg_ollama   | print_info: general.name     = Qwen2-1.5B-Instruct
+esg_ollama   | print_info: vocab type       = BPE
+esg_ollama   | print_info: n_vocab          = 151936
+esg_ollama   | print_info: n_merges         = 151387
+esg_ollama   | print_info: BOS token        = 151643 '<|endoftext|>'
+esg_ollama   | print_info: EOS token        = 151645 '<|im_end|>'
+esg_ollama   | print_info: EOT token        = 151645 '<|im_end|>'
+esg_ollama   | print_info: PAD token        = 151643 '<|endoftext|>'
+esg_ollama   | print_info: LF token         = 198 'Ċ'
+esg_ollama   | print_info: EOG token        = 151643 '<|endoftext|>'
+esg_ollama   | print_info: EOG token        = 151645 '<|im_end|>'
+esg_ollama   | print_info: max token length = 256
+esg_ollama   | load_tensors: loading model tensors, this can take a while... (mmap = false)
+esg_ollama   | load_tensors:          CPU model buffer size =   885.97 MiB
+esg_ollama   | llama_context: constructing llama_context
+esg_ollama   | llama_context: n_seq_max     = 1
+esg_ollama   | llama_context: n_ctx         = 4096
+esg_ollama   | llama_context: n_ctx_seq     = 4096
+esg_ollama   | llama_context: n_batch       = 512
+esg_ollama   | llama_context: n_ubatch      = 512
+esg_ollama   | llama_context: causal_attn   = 1
+esg_ollama   | llama_context: flash_attn    = auto
+esg_ollama   | llama_context: kv_unified    = false
+esg_ollama   | llama_context: freq_base     = 1000000.0
+esg_ollama   | llama_context: freq_scale    = 1
+esg_ollama   | llama_context: n_ctx_seq (4096) < n_ctx_train (32768) -- the full capacity of the model will not be utilized
+esg_ollama   | llama_context:        CPU  output buffer size =     0.59 MiB
+esg_ollama   | llama_kv_cache:        CPU KV buffer size =   112.00 MiB
+esg_ollama   | llama_kv_cache: size =  112.00 MiB (  4096 cells,  28 layers,  1/1 seqs), K (f16):   56.00 MiB, V (f16):   56.00 MiB
+esg_ollama   | llama_context: Flash Attention was auto, set to enabled
+esg_ollama   | llama_context:        CPU compute buffer size =   302.75 MiB
+esg_ollama   | llama_context: graph nodes  = 959
+esg_ollama   | llama_context: graph splits = 1
+esg_ollama   | time=2026-04-29T16:13:17.185Z level=INFO source=server.go:1402 msg="llama runner started in 75.18 seconds"
+esg_ollama   | time=2026-04-29T16:13:17.216Z level=INFO source=sched.go:561 msg="loaded runners" count=1
+esg_ollama   | time=2026-04-29T16:13:17.224Z level=INFO source=server.go:1364 msg="waiting for llama runner to start responding"
+esg_ollama   | time=2026-04-29T16:13:17.229Z level=INFO source=server.go:1402 msg="llama runner started in 75.23 seconds"
+esg_ollama   | [GIN] 2026/04/29 - 16:14:45 | 200 |         2m47s |      172.18.0.2 | POST     "/api/chat"
+esg_ollama   | time=2026-04-29T16:15:02.689Z level=WARN source=types.go:977 msg="invalid option provided" option=tfs_z
+esg_ollama   | time=2026-04-29T16:15:02.690Z level=WARN source=types.go:977 msg="invalid option provided" option=mirostat_tau
+esg_ollama   | time=2026-04-29T16:15:02.690Z level=WARN source=types.go:977 msg="invalid option provided" option=mirostat
+esg_ollama   | time=2026-04-29T16:15:02.690Z level=WARN source=types.go:977 msg="invalid option provided" option=mirostat_eta
+esg_ollama   | [GIN] 2026/04/29 - 16:16:02 | 200 |  145.594365ms |    192.168.65.1 | GET      "/api/tags"
+esg_ollama   | [GIN] 2026/04/29 - 16:16:23 | 200 |         1m21s |      172.18.0.2 | POST     "/api/chat"
+esg_ollama   | time=2026-04-29T16:16:23.971Z level=WARN source=types.go:977 msg="invalid option provided" option=mirostat_eta
+esg_ollama   | time=2026-04-29T16:16:23.971Z level=WARN source=types.go:977 msg="invalid option provided" option=tfs_z
+esg_ollama   | time=2026-04-29T16:16:23.971Z level=WARN source=types.go:977 msg="invalid option provided" option=mirostat_tau
+esg_ollama   | time=2026-04-29T16:16:23.971Z level=WARN source=types.go:977 msg="invalid option provided" option=mirostat
+esg_ollama   | [GIN] 2026/04/29 - 16:17:03 | 200 | 39.552701431s |      172.18.0.2 | POST     "/api/chat"
+esg_ollama   | time=2026-04-29T16:17:03.494Z level=WARN source=types.go:977 msg="invalid option provided" option=mirostat_tau
+esg_ollama   | time=2026-04-29T16:17:03.494Z level=WARN source=types.go:977 msg="invalid option provided" option=mirostat
+esg_ollama   | time=2026-04-29T16:17:03.494Z level=WARN source=types.go:977 msg="invalid option provided" option=mirostat_eta
+esg_ollama   | time=2026-04-29T16:17:03.494Z level=WARN source=types.go:977 msg="invalid option provided" option=tfs_z
+esg_ollama   | [GIN] 2026/04/29 - 16:17:24 | 200 | 21.657234656s |      172.18.0.2 | POST     "/api/chat"
+esg_ollama   | time=2026-04-29T16:17:25.125Z level=WARN source=types.go:977 msg="invalid option provided" option=mirostat_tau
+esg_ollama   | time=2026-04-29T16:17:25.125Z level=WARN source=types.go:977 msg="invalid option provided" option=mirostat_eta
+esg_ollama   | time=2026-04-29T16:17:25.125Z level=WARN source=types.go:977 msg="invalid option provided" option=tfs_z
+esg_ollama   | time=2026-04-29T16:17:25.125Z level=WARN source=types.go:977 msg="invalid option provided" option=mirostat
+esg_ollama   | [GIN] 2026/04/29 - 16:17:44 | 200 | 19.112800513s |      172.18.0.2 | POST     "/api/chat"
+esg_ollama   | time=2026-04-29T16:17:44.417Z level=WARN source=types.go:977 msg="invalid option provided" option=mirostat
+esg_ollama   | time=2026-04-29T16:17:44.418Z level=WARN source=types.go:977 msg="invalid option provided" option=mirostat_tau
+esg_ollama   | time=2026-04-29T16:17:44.418Z level=WARN source=types.go:977 msg="invalid option provided" option=mirostat_eta
+esg_ollama   | time=2026-04-29T16:17:44.418Z level=WARN source=types.go:977 msg="invalid option provided" option=tfs_z
+esg_ollama   | [GIN] 2026/04/29 - 16:18:05 | 200 | 21.377110768s |      172.18.0.2 | POST     "/api/chat"
+esg_ollama   | time=2026-04-29T16:18:05.764Z level=WARN source=types.go:977 msg="invalid option provided" option=mirostat_tau
+esg_ollama   | time=2026-04-29T16:18:05.764Z level=WARN source=types.go:977 msg="invalid option provided" option=tfs_z
+esg_ollama   | time=2026-04-29T16:18:05.764Z level=WARN source=types.go:977 msg="invalid option provided" option=mirostat
+esg_ollama   | time=2026-04-29T16:18:05.764Z level=WARN source=types.go:977 msg="invalid option provided" option=mirostat_eta
+esg_ollama   | [GIN] 2026/04/29 - 16:18:42 | 200 | 37.248347133s |      172.18.0.2 | POST     "/api/chat"
+esg_ollama   | time=2026-04-29T16:18:43.081Z level=WARN source=types.go:977 msg="invalid option provided" option=mirostat_eta
+esg_ollama   | time=2026-04-29T16:18:43.081Z level=WARN source=types.go:977 msg="invalid option provided" option=mirostat
+esg_ollama   | time=2026-04-29T16:18:43.081Z level=WARN source=types.go:977 msg="invalid option provided" option=mirostat_tau
+esg_ollama   | time=2026-04-29T16:18:43.081Z level=WARN source=types.go:977 msg="invalid option provided" option=tfs_z
+esg_ollama   | [GIN] 2026/04/29 - 16:19:03 | 200 | 20.568079145s |      172.18.0.2 | POST     "/api/chat"
+esg_ollama   | time=2026-04-29T16:19:03.686Z level=WARN source=types.go:977 msg="invalid option provided" option=mirostat
+esg_ollama   | time=2026-04-29T16:19:03.686Z level=WARN source=types.go:977 msg="invalid option provided" option=tfs_z
+esg_ollama   | time=2026-04-29T16:19:03.686Z level=WARN source=types.go:977 msg="invalid option provided" option=mirostat_tau
+esg_ollama   | time=2026-04-29T16:19:03.686Z level=WARN source=types.go:977 msg="invalid option provided" option=mirostat_eta
+esg_ollama   | [GIN] 2026/04/29 - 16:19:35 | 200 | 32.068210095s |      172.18.0.2 | POST     "/api/chat"
+esg_ollama   | time=2026-04-29T16:19:35.832Z level=WARN source=types.go:977 msg="invalid option provided" option=mirostat_tau
+esg_ollama   | time=2026-04-29T16:19:35.832Z level=WARN source=types.go:977 msg="invalid option provided" option=tfs_z
+esg_ollama   | time=2026-04-29T16:19:35.832Z level=WARN source=types.go:977 msg="invalid option provided" option=mirostat
+esg_ollama   | time=2026-04-29T16:19:35.832Z level=WARN source=types.go:977 msg="invalid option provided" option=mirostat_eta
+esg_ollama   | [GIN] 2026/04/29 - 16:21:00 | 200 |         1m24s |      172.18.0.2 | POST     "/api/chat"
+esg_ollama   | time=2026-04-29T16:21:01.483Z level=WARN source=types.go:977 msg="invalid option provided" option=tfs_z
+esg_ollama   | time=2026-04-29T16:21:01.483Z level=WARN source=types.go:977 msg="invalid option provided" option=mirostat
+esg_ollama   | time=2026-04-29T16:21:01.483Z level=WARN source=types.go:977 msg="invalid option provided" option=mirostat_tau
+esg_ollama   | time=2026-04-29T16:21:01.483Z level=WARN source=types.go:977 msg="invalid option provided" option=mirostat_eta
+esg_ollama   | [GIN] 2026/04/29 - 16:21:48 | 200 | 47.084700284s |      172.18.0.2 | POST     "/api/chat"
+esg_ollama   | time=2026-04-29T16:21:48.253Z level=WARN source=types.go:977 msg="invalid option provided" option=mirostat_tau
+esg_ollama   | time=2026-04-29T16:21:48.253Z level=WARN source=types.go:977 msg="invalid option provided" option=mirostat
+esg_ollama   | time=2026-04-29T16:21:48.253Z level=WARN source=types.go:977 msg="invalid option provided" option=mirostat_eta
+esg_ollama   | time=2026-04-29T16:21:48.253Z level=WARN source=types.go:977 msg="invalid option provided" option=tfs_z
+esg_ollama   | [GIN] 2026/04/29 - 16:22:05 | 200 | 16.983521186s |      172.18.0.2 | POST     "/api/chat"
+esg_backend  | INFO:     Shutting down
+esg_ui       |   Stopping...
+esg_backend  | INFO:     Waiting for application shutdown.
+esg_backend  | INFO:     Application shutdown complete.
+esg_backend  | INFO:     Finished server process [1]
+[Kesg_backend exited with code 137
+[Kesg_ui exited with code 137
+[Kesg_ollama exited with code 137

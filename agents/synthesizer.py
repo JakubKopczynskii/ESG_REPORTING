@@ -9,12 +9,14 @@ import json
 import os
 import re
 import sys
+from concurrent.futures import ThreadPoolExecutor, TimeoutError
+from typing import Any, cast
 
 from langchain_ollama import ChatOllama
 from langchain_core.messages import HumanMessage, SystemMessage
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-from agents.state import AgentState, IntegrityScorecard, EvidenceItem
+from agents.state import AgentState, IntegrityScorecard, EvidenceItem, ContradictionPair
 from config.esg_frameworks import MATERIALITY_WEIGHTS
 
 
@@ -28,6 +30,16 @@ Return ONLY valid JSON:
   "recommendations": ["list of 5-7 actionable recommendations"],
   "risk_level": "LOW|MEDIUM|HIGH|CRITICAL"
 }"""
+
+CROSS_REF_PROMPT = """Find contradictions between company claims and news.
+
+Claims: {claims}
+
+News: {news}
+
+Return JSON array of contradictions, each with report_claim, external_evidence, source_url, reasoning, severity.
+
+Only JSON, no other text."""
 
 
 def _compute_materiality_score(state: AgentState) -> float:
@@ -74,9 +86,65 @@ def _gather_all_evidence(state: AgentState) -> list[EvidenceItem]:
     return all_evidence
 
 
+def _normalize_llm_response(resp: Any) -> str:
+    content = getattr(resp, 'content', resp)
+    if isinstance(content, list):
+        return "\n".join(str(item) for item in content)
+    return str(content)
+
+
+def _invoke_llm_with_timeout(llm: ChatOllama, messages: list, timeout: int = 90):
+    with ThreadPoolExecutor(max_workers=1) as executor:
+        future = executor.submit(llm.invoke, messages)
+        try:
+            return future.result(timeout=timeout)
+        except TimeoutError:
+            future.cancel()
+            raise TimeoutError(f"LLM invocation timed out after {timeout} seconds")
+        except Exception:
+            raise
+
+
+def _find_contradictions(llm: ChatOllama, state: AgentState) -> list[ContradictionPair]:
+    print("[Synthesizer] Starting contradiction detection...")
+    claims = []
+    for r in state.get("materiality_results", []):
+        claims.extend(r.get("found_disclosures", []))
+
+    # Limit to top 5 claims to avoid overly long prompts
+    claims = claims[:5]
+    
+    news = [f"{c['title']}: {c.get('snippet','')} (Source: {c.get('url','')})"
+            for c in state.get("controversies", [])]
+    
+    # Limit to top 5 news items
+    news = news[:5]
+    
+    if not claims or not news:
+        print("[Synthesizer] No claims or news for contradiction check.")
+        return []
+
+    user_msg = CROSS_REF_PROMPT.format(claims=json.dumps(claims), news=json.dumps(news))
+    messages = [HumanMessage(content=user_msg)]
+    try:
+        print("[Synthesizer] Calling LLM for contradictions...")
+        resp = _invoke_llm_with_timeout(llm, messages, timeout=90)
+        print("[Synthesizer] LLM response received for contradictions.")
+        raw = re.sub(r"```json\s*|\s*```", "", _normalize_llm_response(resp).strip())
+        parsed = json.loads(raw)
+        if isinstance(parsed, list):
+            contradictions = cast(list[ContradictionPair], parsed)
+            print(f"[Synthesizer] Found {len(contradictions)} contradictions.")
+            return contradictions
+    except Exception as e:
+        print(f"[Synthesizer] Error in contradiction detection: {e}")
+    return []
+
+
 def _call_llm_summary(llm: ChatOllama, state: AgentState,
                        scores: dict) -> dict:
     """Generate executive summary using the LLM."""
+    print("[Synthesizer] Generating LLM summary...")
     # Build concise brief for the LLM
     missing_topics = [
         r["topic"] for r in state.get("materiality_results", []) if not r["present"]
@@ -101,10 +169,11 @@ Generate an ESG integrity assessment. Return JSON only."""
         HumanMessage(content=brief),
     ]
     try:
-        resp = llm.invoke(messages)
-        raw = re.sub(r"```json\s*|\s*```", "", resp.content.strip()).strip()
+        resp = _invoke_llm_with_timeout(llm, messages, timeout=90)
+        raw = re.sub(r"```json\s*|\s*```", "", _normalize_llm_response(resp).strip()).strip()
         return json.loads(raw)
     except Exception as e:
+        print(f"[Synthesizer] LLM summary fallback due to error: {e}")
         return {
             "summary": f"ESG analysis completed for {state['company_name']}. Review individual sections for details.",
             "greenwashing_flags": [],
@@ -128,6 +197,7 @@ def run_synthesizer(state: AgentState) -> AgentState:
         model=os.getenv("OLLAMA_MODEL", "qwen2:1.5b"),
         base_url=os.getenv("OLLAMA_BASE_URL", "http://localhost:11434"),
         temperature=0.3,
+        num_predict=500,  # Limit response length to speed up
     )
 
     # ── Compute numeric scores ─────────────────────────────────────────────
@@ -157,6 +227,8 @@ def run_synthesizer(state: AgentState) -> AgentState:
         risk_level = "LOW"
 
     # ── Assemble scorecard ────────────────────────────────────────────────
+    contradictions = _find_contradictions(llm, state)
+
     scorecard = IntegrityScorecard(
         company_name=state["company_name"],
         report_year=state["report_year"],
@@ -169,6 +241,7 @@ def run_synthesizer(state: AgentState) -> AgentState:
         materiality_results=state.get("materiality_results", []),
         controversies=state.get("controversies", []),
         scientific_data=state.get("scientific_data", []),
+        contradictions=contradictions,
         all_evidence=_gather_all_evidence(state),
         recommendations=llm_result.get("recommendations", []),
         greenwashing_flags=llm_result.get("greenwashing_flags", []),

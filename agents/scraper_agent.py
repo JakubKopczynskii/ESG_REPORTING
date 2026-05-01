@@ -11,6 +11,7 @@ import os
 import re
 import sys
 from datetime import datetime
+from typing import Any
 
 import httpx
 from langchain_ollama import ChatOllama
@@ -52,27 +53,24 @@ Return ONLY valid JSON:
 }"""
 
 
+from duckduckgo_search import AsyncDDGS
+
 async def _fetch_duckduckgo(company: str, keyword: str, client: httpx.AsyncClient) -> list[dict]:
-    """Use DuckDuckGo Instant Answer API (no key required) as fallback."""
+    """Use DuckDuckGo News Search to find actual controversies."""
     results = []
     try:
         query = f"{company} {keyword}"
-        resp = await client.get(
-            "https://api.duckduckgo.com/",
-            params={"q": query, "format": "json", "no_html": "1"},
-            timeout=10.0,
-        )
-        if resp.status_code == 200:
-            data = resp.json()
-            # RelatedTopics contains snippets
-            for item in data.get("RelatedTopics", [])[:3]:
-                if isinstance(item, dict) and item.get("Text"):
-                    results.append({
-                        "title": item.get("Text", "")[:100],
-                        "snippet": item.get("Text", ""),
-                        "url": item.get("FirstURL", ""),
-                        "source": "DuckDuckGo",
-                    })
+        # Using the async version of the DuckDuckGo scraper
+        async with AsyncDDGS() as ddgs:
+            # Fetch top 3 news articles for this query
+            items = ddgs.news(query, max_results=3)
+            for item in items:
+                results.append({
+                    "title": item.get("title", ""),
+                    "snippet": item.get("body", ""),
+                    "url": item.get("url", ""),
+                    "source": item.get("source", "DuckDuckGo News"),
+                })
     except Exception as e:
         print(f"  [scraper] DuckDuckGo error: {e}")
     return results
@@ -138,6 +136,13 @@ async def _search_controversies(company: str, serpapi_key: str | None) -> list[d
     return deduped
 
 
+def _normalize_llm_response(resp: Any) -> str:
+    content = getattr(resp, 'content', resp)
+    if isinstance(content, list):
+        return "\n".join(str(item) for item in content)
+    return str(content)
+
+
 def _classify_controversy(llm: ChatOllama, item: dict) -> dict | None:
     """Ask LLM to classify whether the article is an ESG controversy."""
     text = f"TITLE: {item.get('title', '')}\nSNIPPET: {item.get('snippet', '')}"
@@ -147,7 +152,7 @@ def _classify_controversy(llm: ChatOllama, item: dict) -> dict | None:
     ]
     try:
         resp = llm.invoke(messages)
-        raw = re.sub(r"```json\s*|\s*```", "", resp.content.strip()).strip()
+        raw = re.sub(r"```json\s*|\s*```", "", _normalize_llm_response(resp).strip()).strip()
         result = json.loads(raw)
         if result.get("is_esg_controversy"):
             return result

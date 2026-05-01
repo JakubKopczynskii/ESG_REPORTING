@@ -13,12 +13,12 @@ Directed graph:
 
 import os
 import sys
-from typing import Literal
+from typing import Any, Literal, cast
 
 from langgraph.graph import END, START, StateGraph
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-from agents.state import AgentState
+from agents.state import AgentState, IntegrityScorecard
 from agents.materiality_agent import run_materiality_agent
 from agents.scraper_agent import run_scraper_agent
 from agents.scientific_verifier import run_scientific_verifier
@@ -44,11 +44,14 @@ def node_pdf(state: AgentState) -> AgentState:
     """Generate the final PDF report."""
     if state.get("scorecard"):
         try:
-            pdf_path = generate_pdf_report(state["scorecard"])
+            pdf_path = generate_pdf_report(cast(IntegrityScorecard, state["scorecard"]))
             state["pdf_path"] = pdf_path
             print(f"[PDFGenerator] Report saved to {pdf_path}")
         except Exception as e:
-            state["errors"] = state.get("errors", []) + [f"PDF generation failed: {e}"]
+            error_message = f"PDF generation failed: {e}"
+            print(f"[PDFGenerator] {error_message}")
+            state["errors"] = state.get("errors", []) + [error_message]
+            raise
     return state
 
 
@@ -59,7 +62,7 @@ def should_continue_after_scraper(state: AgentState) -> Literal["scientific", "s
     return "scientific" if has_emissions else "synthesizer"
 
 
-def build_graph() -> StateGraph:
+def build_graph() -> Any:
     """Construct and compile the LangGraph pipeline."""
     graph = StateGraph(AgentState)
 
@@ -98,7 +101,7 @@ def get_graph():
 def run_audit(
     company_name: str,
     report_text: str,
-    report_year: str = "2024",
+    report_year: str = "2025",
     industry_sector: str = "General",
 ) -> AgentState:
     """
@@ -121,5 +124,5 @@ def run_audit(
     )
 
     graph = get_graph()
-    final_state = graph.invoke(initial_state)
+    final_state = graph.invoke(initial_state)  # type: ignore
     return final_state

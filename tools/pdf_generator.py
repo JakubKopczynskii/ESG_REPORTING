@@ -8,7 +8,7 @@ Includes score gauges, evidence tables, controversy log, and recommendations.
 import os
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import Sequence, TYPE_CHECKING
 
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
@@ -16,6 +16,7 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import cm, mm
 from reportlab.platypus import (
+    Flowable,
     HRFlowable,
     Image,
     PageBreak,
@@ -30,7 +31,8 @@ from reportlab.platypus.flowables import KeepTogether
 if TYPE_CHECKING:
     from agents.state import IntegrityScorecard
 
-REPORTS_DIR = Path(os.getenv("REPORTS_DIR", "/app/reports"))
+DEFAULT_REPORTS_DIR = Path(__file__).resolve().parents[1] / "reports"
+REPORTS_DIR = Path(os.getenv("REPORTS_DIR", DEFAULT_REPORTS_DIR))
 REPORTS_DIR.mkdir(parents=True, exist_ok=True)
 
 # ─── Colour palette ──────────────────────────────────────────────────────────
@@ -71,7 +73,7 @@ def _build_styles():
         ),
         "section": ParagraphStyle(
             "section", fontSize=14, textColor=BLACK, fontName="Helvetica-Bold",
-            spaceBefore=14, spaceAfter=6, borderPadding=(0, 0, 4, 0),
+            spaceBefore=14, spaceAfter=6, borderPadding=4.0,
         ),
         "body": ParagraphStyle(
             "body", fontSize=9, textColor=BLACK, fontName="Helvetica",
@@ -92,6 +94,10 @@ def _build_styles():
         "flag": ParagraphStyle(
             "flag", fontSize=9, textColor=DANGER, fontName="Helvetica-Bold",
             leading=13, leftIndent=10,
+        ),
+        "recommendation": ParagraphStyle(
+            "recommendation", fontSize=10, textColor=BLACK, fontName="Helvetica",
+            leftIndent=10, leading=14, spaceAfter=4,
         ),
         "header": ParagraphStyle(
             "header", fontSize=10, textColor=MID_GRAY, fontName="Helvetica",
@@ -145,9 +151,9 @@ def _score_table(scorecard: "IntegrityScorecard", styles: dict) -> Table:
         ]
 
     data = [[
-        cell(scorecard["materiality_score"],          "Materiality\nCoverage"),
-        cell(scorecard["controversy_score"],           "Controversy\nRisk Score"),
-        cell(scorecard["scientific_alignment_score"],  "Scientific\nAlignment"),
+        cell(scorecard.get("materiality_score", 0),          "Materiality\nCoverage"),
+        cell(scorecard.get("controversy_score", 0),           "Controversy\nRisk Score"),
+        cell(scorecard.get("scientific_alignment_score", 0),  "Scientific\nAlignment"),
     ]]
 
     t = Table(data, colWidths=[5.5*cm, 5.5*cm, 5.5*cm])
@@ -164,8 +170,8 @@ def _score_table(scorecard: "IntegrityScorecard", styles: dict) -> Table:
 
 
 def _materiality_table(results: list, styles: dict) -> Table:
-    header = ["Topic", "Present", "Coverage", "Missing Disclosures"]
-    rows = [header]
+    header: list[Flowable | str] = ["Topic", "Present", "Coverage", "Missing Disclosures"]
+    rows: list[list[Flowable | str]] = [header]
     for r in results:
         missing = "; ".join(r["missing_disclosures"][:2])
         if len(r["missing_disclosures"]) > 2:
@@ -197,12 +203,12 @@ def _materiality_table(results: list, styles: dict) -> Table:
     return t
 
 
-def _controversy_table(controversies: list, styles: dict) -> Table:
+def _controversy_table(controversies: list, styles: dict) -> Flowable:
     if not controversies:
         return Paragraph("No controversies identified.", styles["body"])
 
-    header = ["Severity", "Category", "Title", "Source"]
-    rows = [header]
+    header: list[Flowable | str] = ["Severity", "Category", "Title", "Source"]
+    rows: list[list[Flowable | str]] = [header]
     for c in controversies[:15]:
         rows.append([
             c["severity"],
@@ -230,12 +236,12 @@ def _controversy_table(controversies: list, styles: dict) -> Table:
     return t
 
 
-def _scientific_table(data_points: list, styles: dict) -> Table:
+def _scientific_table(data_points: list, styles: dict) -> Flowable:
     if not data_points:
         return Paragraph("No scientific data comparison performed.", styles["body"])
 
-    header = ["Metric", "Reported", "Satellite Data", "Discrepancy", "Risk"]
-    rows = [header]
+    header: list[Flowable | str] = ["Metric", "Reported", "Satellite Data", "Discrepancy", "Risk"]
+    rows: list[list[Flowable | str]] = [header]
     for dp in data_points:
         rows.append([
             Paragraph(dp["metric"], styles["body"]),
@@ -264,7 +270,7 @@ def _scientific_table(data_points: list, styles: dict) -> Table:
 def generate_pdf_report(scorecard: "IntegrityScorecard") -> str:
     """Generate the full PDF and return its file path."""
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    safe_name = scorecard["company_name"].replace(" ", "_")[:30]
+    safe_name = scorecard.get("company_name", "Unknown").replace(" ", "_")[:30]
     filename = REPORTS_DIR / f"ESG_Audit_{safe_name}_{timestamp}.pdf"
 
     doc = SimpleDocTemplate(
@@ -288,17 +294,17 @@ def generate_pdf_report(scorecard: "IntegrityScorecard") -> str:
     ))
 
     # ── Cover Header (inside top stripe area) ─────────────────────────────
-    risk_col = RISK_COLORS.get(scorecard["risk_level"], WARNING)
+    risk_col = RISK_COLORS.get(scorecard.get("risk_level", "MEDIUM"), WARNING)
     story.append(Paragraph(
         f"ESG Integrity Scorecard", styles["title"]
     ))
     story.append(Paragraph(
-        f"{scorecard['company_name']}  ·  Reporting Year {scorecard['report_year']}", styles["subtitle"]
+        f"{scorecard.get('company_name', 'Unknown')}  ·  Reporting Year {scorecard.get('report_year', 'N/A')}", styles["subtitle"]
     ))
     story.append(Spacer(1, 0.3*cm))
 
     # Overall score pill
-    overall = scorecard["overall_score"]
+    overall = scorecard.get("overall_score", 0)
     grade = _score_to_grade(overall)
     story.append(Table(
         [[
@@ -308,7 +314,7 @@ def generate_pdf_report(scorecard: "IntegrityScorecard") -> str:
             Paragraph(f"Grade: <b>{grade}</b>", ParagraphStyle(
                 "og", fontSize=14, textColor=ACCENT, fontName="Helvetica-Bold",
             )),
-            Paragraph(f"Risk: <b>{scorecard['risk_level']}</b>", ParagraphStyle(
+            Paragraph(f"Risk: <b>{scorecard.get('risk_level', 'MEDIUM')}</b>", ParagraphStyle(
                 "or", fontSize=14, textColor=risk_col, fontName="Helvetica-Bold",
             )),
         ]],
@@ -330,15 +336,15 @@ def generate_pdf_report(scorecard: "IntegrityScorecard") -> str:
     story.append(Paragraph("Executive Summary", styles["section"]))
     story.append(HRFlowable(width="100%", thickness=1, color=ACCENT))
     story.append(Spacer(1, 0.2*cm))
-    story.append(Paragraph(scorecard["summary"], styles["body"]))
+    story.append(Paragraph(scorecard.get("summary", "No summary available."), styles["body"]))
     story.append(Spacer(1, 0.4*cm))
 
     # ── Greenwashing Flags ─────────────────────────────────────────────────
-    if scorecard["greenwashing_flags"]:
+    if scorecard.get("greenwashing_flags", []):
         story.append(Paragraph("⚠ Greenwashing Flags", styles["section"]))
         story.append(HRFlowable(width="100%", thickness=1, color=DANGER))
         story.append(Spacer(1, 0.2*cm))
-        for flag in scorecard["greenwashing_flags"]:
+        for flag in scorecard.get("greenwashing_flags", []):
             story.append(Paragraph(f"• {flag}", styles["flag"]))
         story.append(Spacer(1, 0.4*cm))
 
@@ -348,12 +354,12 @@ def generate_pdf_report(scorecard: "IntegrityScorecard") -> str:
     story.append(HRFlowable(width="100%", thickness=1, color=ACCENT))
     story.append(Spacer(1, 0.3*cm))
     story.append(Paragraph(
-        f"Coverage score: <b>{scorecard['materiality_score']:.1f}/100</b> — "
+        f"Coverage score: <b>{scorecard.get('materiality_score', 0):.1f}/100</b> — "
         f"Evaluated against {len(MATERIALITY_HEADINGS)} SASB topic areas.",
         styles["body"]
     ))
     story.append(Spacer(1, 0.3*cm))
-    story.append(_materiality_table(scorecard["materiality_results"], styles))
+    story.append(_materiality_table(scorecard.get("materiality_results", []), styles))
     story.append(Spacer(1, 0.5*cm))
 
     # ── Controversy Log ────────────────────────────────────────────────────
@@ -362,11 +368,11 @@ def generate_pdf_report(scorecard: "IntegrityScorecard") -> str:
     story.append(HRFlowable(width="100%", thickness=1, color=ACCENT))
     story.append(Spacer(1, 0.3*cm))
     story.append(Paragraph(
-        f"Found <b>{len(scorecard['controversies'])} ESG controversies</b> in real-time news and databases.",
+        f"Found <b>{len(scorecard.get('controversies', []))} ESG controversies</b> in real-time news and databases.",
         styles["body"]
     ))
     story.append(Spacer(1, 0.3*cm))
-    story.append(_controversy_table(scorecard["controversies"], styles))
+    story.append(_controversy_table(scorecard.get("controversies", []), styles))
     story.append(Spacer(1, 0.5*cm))
 
     # ── Scientific Verification ────────────────────────────────────────────
@@ -379,7 +385,7 @@ def generate_pdf_report(scorecard: "IntegrityScorecard") -> str:
         styles["body"]
     ))
     story.append(Spacer(1, 0.3*cm))
-    story.append(_scientific_table(scorecard["scientific_data"], styles))
+    story.append(_scientific_table(scorecard.get("scientific_data", []), styles))
     story.append(Spacer(1, 0.5*cm))
 
     # ── Recommendations ────────────────────────────────────────────────────
@@ -387,7 +393,7 @@ def generate_pdf_report(scorecard: "IntegrityScorecard") -> str:
     story.append(Paragraph("4. Recommendations", styles["section"]))
     story.append(HRFlowable(width="100%", thickness=1, color=ACCENT))
     story.append(Spacer(1, 0.2*cm))
-    for i, rec in enumerate(scorecard["recommendations"], 1):
+    for i, rec in enumerate(scorecard.get("recommendations", []), 1):
         story.append(Paragraph(f"{i}. {rec}", styles["recommendation"]))
     story.append(Spacer(1, 0.5*cm))
 
@@ -395,7 +401,7 @@ def generate_pdf_report(scorecard: "IntegrityScorecard") -> str:
     story.append(Paragraph("5. Evidence Trail", styles["section"]))
     story.append(HRFlowable(width="100%", thickness=1, color=ACCENT))
     story.append(Spacer(1, 0.2*cm))
-    for ev in scorecard["all_evidence"][:30]:
+    for ev in scorecard.get("all_evidence", [])[:30]:
         story.append(Paragraph(
             f"[{ev['category']}] <i>{ev['source']}</i> — {ev['excerpt'][:200]}",
             styles["evidence"]

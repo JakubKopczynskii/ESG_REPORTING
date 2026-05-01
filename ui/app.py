@@ -270,7 +270,7 @@ with st.sidebar:
 
     st.markdown("### Navigation")
     page = st.radio("Navigate", ["🔍 New Audit", "📊 Results Dashboard", "📋 Job History"],
-                    label_visibility="collapsed")
+                    label_visibility="collapsed") or ""
 
     st.markdown("---")
     st.markdown("### Agent Pipeline")
@@ -344,7 +344,7 @@ if "🔍 New Audit" in page:
         st.markdown('<div class="section-header">Audit Configuration</div>', unsafe_allow_html=True)
 
         company_name = st.text_input("Company Name", placeholder="e.g. Acme Corporation")
-        report_year = st.selectbox("Report Year", ["2024", "2023", "2022", "2021"], index=0)
+        report_year = st.selectbox("Report Year", ["2025","2024", "2023", "2022", "2021"], index=0)
         industry_sector = st.selectbox(
             "Industry Sector",
             ["General", "Energy & Utilities", "Materials & Mining",
@@ -518,6 +518,11 @@ elif "📊 Results Dashboard" in page:
         st.stop()
 
     elif status == "completed":
+        if job.get("errors"):
+            st.error("The audit completed but encountered issues:")
+            for err in job.get("errors", []):
+                st.markdown(f"- {err}")
+
         status_placeholder.empty()
         scorecard = job.get("scorecard", {})
 
@@ -527,6 +532,11 @@ elif "📊 Results Dashboard" in page:
 
         overall = scorecard.get("overall_score", 0)
         risk = scorecard.get("risk_level", "MEDIUM")
+        num_contradictions = len(scorecard.get("contradictions", []))
+        contradiction_summary = (
+            f"{num_contradictions} automated fact-to-news contradiction(s) detected"
+            if num_contradictions else "No automated fact-to-news contradictions detected"
+        )
         rc = risk_color(risk)
 
         # ── Hero banner ────────────────────────────────────────────────────
@@ -556,6 +566,9 @@ elif "📊 Results Dashboard" in page:
             <div style="margin-top:12px">
               <span style="background:{rc};color:#000;padding:4px 14px;border-radius:20px;
                            font-size:0.8rem;font-weight:700">{risk} RISK</span>
+            </div>
+            <div style="margin-top:10px;color:#C9D1D9;font-size:0.85rem;line-height:1.5;">
+              {contradiction_summary}
             </div>
           </div>
         </div>
@@ -593,7 +606,24 @@ elif "📊 Results Dashboard" in page:
             else:
                 st.markdown('<div style="color:#00C896;font-size:0.88rem">✓ No greenwashing flags detected</div>',
                            unsafe_allow_html=True)
-
+        contradictions = scorecard.get("contradictions", [])
+        if contradictions:
+            st.markdown('<div class="section-header">🚨 Direct Integrity Contradictions</div>', unsafe_allow_html=True)
+            for c in contradictions:
+                col1, col2 = st.columns([2, 3], gap="large")
+                with col1:
+                    st.markdown(f"""<div style="background:#0F1923;border:1px solid #21262D;border-radius:12px;padding:16px;">
+                                    <div style="font-size:0.9rem;color:#00C896;font-weight:700;margin-bottom:8px">Report Claim</div>
+                                    <div style="color:#E6EDF3;line-height:1.6">{c.get('report_claim','—')}</div>
+                                </div>""", unsafe_allow_html=True)
+                with col2:
+                    st.markdown(f"""<div style="background:#0F1923;border:1px solid #21262D;border-radius:12px;padding:16px;">
+                                    <div style="font-size:0.9rem;color:#F5A623;font-weight:700;margin-bottom:8px">External Evidence</div>
+                                    <div style="color:#E6EDF3;line-height:1.6">{c.get('external_evidence','—')}</div>
+                                    <div style="margin-top:12px"><a href="{c.get('source_url','#')}" target="_blank" style="color:#00C896;text-decoration:none">View Source</a></div>
+                                </div>""", unsafe_allow_html=True)
+                st.info(f"**Reasoning:** {c.get('reasoning','No reasoning provided.')}")
+                st.markdown('---')
         # ── Detailed tabs ─────────────────────────────────────────────────
         st.markdown("")
         t1, t2, t3, t4 = st.tabs(["📋 Materiality", "📰 Controversies", "🛰 Scientific Data", "✅ Recommendations"])
@@ -679,18 +709,19 @@ elif "📋 Job History" in page:
     if not jobs:
         st.info("No jobs found. Run an audit first.")
     else:
-        df = pd.DataFrame(jobs)
+        jobs_list = list(jobs)
+        df = pd.DataFrame(jobs_list)
         df.columns = ["Job ID", "Company", "Status", "Created"]
         st.dataframe(df, use_container_width=True, hide_index=True)
 
         st.markdown("### Load a Previous Result")
         selected = st.selectbox(
             "Select job",
-            [j["job_id"] for j in jobs],
+            [j["job_id"] for j in jobs_list],
             format_func=lambda jid: next(
                 (f"{j['company_name']} — {j['status']} ({j['created_at'][:10]})"
-                 for j in jobs if j["job_id"] == jid), jid)
-        )
+                 for j in jobs_list if j["job_id"] == jid), str(jid)),
+        ) or ""
         if st.button("Load Selected Job"):
             st.session_state["current_job_id"] = selected
             st.session_state["current_company"] = next(

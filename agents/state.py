@@ -36,6 +36,14 @@ class Controversy(TypedDict):
     date: str
 
 
+class ContradictionPair(TypedDict):
+    report_claim: str      # The "fact" found in the PDF
+    external_evidence: str # The news controversy or satellite data
+    source_url: str        # URL to the news item
+    reasoning: str         # Why the LLM thinks they clash
+    severity: str          # LOW | MEDIUM | HIGH
+
+
 # ─── Scientific data point from ESA/NASA ─────────────────────────────────────
 class ScientificDataPoint(TypedDict):
     metric: str            # e.g. "CH4 concentration", "forest cover loss"
@@ -61,6 +69,7 @@ class IntegrityScorecard(TypedDict):
     materiality_results: list[MaterialityResult]
     controversies: list[Controversy]
     scientific_data: list[ScientificDataPoint]
+    contradictions: list[ContradictionPair]
     all_evidence: list[EvidenceItem]
     recommendations: list[str]
     greenwashing_flags: list[str]
