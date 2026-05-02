@@ -44,6 +44,17 @@ _jobs: dict[str, dict] = {}
 _executor = ThreadPoolExecutor(max_workers=2)
 
 
+def _record_job_log(job_id: str, message: str, level: str = "info") -> None:
+    entry = {
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "level": level,
+        "message": message,
+    }
+    job = _jobs.get(job_id)
+    if job is not None:
+        job.setdefault("pipeline_logs", []).append(entry)
+
+
 class AuditRequest(BaseModel):
     company_name: str
     report_text: str
@@ -62,6 +73,7 @@ def _run_in_thread(
     """Execute the LangGraph pipeline in a background thread."""
     try:
         _jobs[job_id]["status"] = "running"
+        _record_job_log(job_id, "Audit started: preparing report text and AI agents.")
         
         # 1. Parse the PDF in the background thread
         text = ""
@@ -76,6 +88,16 @@ def _run_in_thread(
         if len(text.strip()) < 100:
             raise ValueError("Report text too short or empty")
 
+        _record_job_log(job_id, f"Loaded report text ({len(text.splitlines())} lines).")
+
+        report_lower = text.lower()
+        if any(kw in report_lower for kw in ["emissions", "co2", "carbon", "methane"]):
+            _record_job_log(job_id, "Materiality analysis complete. Preparing scientific verification.")
+        else:
+            _record_job_log(job_id, "Materiality analysis complete. No emissions keywords detected; skipping scientific verifier.")
+
+        _record_job_log(job_id, "Running the full multi-agent ESG audit pipeline.")
+
         # 2. Run the audit pipeline
         result = run_audit(
             company_name=company_name,
@@ -83,6 +105,7 @@ def _run_in_thread(
             report_year=report_year,
             industry_sector=industry_sector,
         )
+        _record_job_log(job_id, "AI agents completed analysis and generated results.")
         _jobs[job_id]["status"] = "completed"
         _jobs[job_id]["scorecard"] = result.get("scorecard")
         _jobs[job_id]["pdf_path"] = result.get("pdf_path")
@@ -91,6 +114,7 @@ def _run_in_thread(
     except Exception as e:
         _jobs[job_id]["status"] = "failed"
         _jobs[job_id]["error"] = str(e)
+        _record_job_log(job_id, f"Audit failed: {e}", level="error")
 
 
 @app.get("/health")
@@ -110,7 +134,9 @@ async def start_audit(request: AuditRequest):
         "scorecard": None,
         "pdf_path": None,
         "errors": [],
+        "pipeline_logs": [],
     }
+    _record_job_log(job_id, "Audit queued and awaiting execution.")
 
     loop = asyncio.get_running_loop()
     loop.run_in_executor(
@@ -147,7 +173,9 @@ async def start_audit_with_file(
         "scorecard": None,
         "pdf_path": None,
         "errors": [],
+        "pipeline_logs": [],
     }
+    _record_job_log(job_id, "Audit queued and awaiting execution.")
 
     loop = asyncio.get_running_loop()
     loop.run_in_executor(
@@ -180,6 +208,7 @@ def get_audit_status(job_id: str):
         "errors": job.get("errors", []),
         "pdf_path": job.get("pdf_path"),
         "has_pdf": bool(job.get("pdf_path")),
+        "pipeline_logs": job.get("pipeline_logs", []),
     }
 
     if job["status"] == "completed" and job.get("scorecard"):

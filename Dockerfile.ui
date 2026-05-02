@@ -11,6 +11,17 @@ COPY ui/ ./ui/
 
 RUN mkdir -p /app/reports
 
+# Create a test script to validate imports and show errors
+RUN cat > /app/entrypoint.sh << 'EOF'
+#!/bin/bash
+set -e
+echo "=== Testing Python imports ==="
+python3 -c "import sys; sys.path.insert(0, '.'); from ui import app; print('✓ UI module imports successfully')" 2>&1 || (echo "✗ Import failed:" && python3 -c "import sys; sys.path.insert(0, '.'); from ui import app" && exit 1)
+echo "=== Starting Streamlit ==="
+exec streamlit run ui/app.py --server.port=8501 --server.address=0.0.0.0 --logger.level=debug --client.showErrorDetails=true
+EOF
+RUN chmod +x /app/entrypoint.sh
+
 EXPOSE 8501
 
-CMD ["streamlit", "run", "ui/app.py", "--server.port=8501", "--server.address=0.0.0.0", "--server.headless=true"]
+CMD ["/app/entrypoint.sh"]
