@@ -35,7 +35,8 @@ REPORTS_DIR = Path(os.getenv("REPORTS_DIR", DEFAULT_REPORTS_DIR))
 REPORTS_DIR.mkdir(parents=True, exist_ok=True)
 
 # ─── Colour palette ──────────────────────────────────────────────────────────
-DARK_BG    = colors.HexColor("#0F1923")
+# DARK_BG    = colors.HexColor("#0F1923")
+DARK_BG    = colors.white
 ACCENT     = colors.HexColor("#00C896")
 WARNING    = colors.HexColor("#F5A623")
 DANGER     = colors.HexColor("#E05C5C")
@@ -263,7 +264,7 @@ def generate_pdf_report(scorecard: "IntegrityScorecard", output_path: Optional[s
     doc = SimpleDocTemplate(
         str(filename),
         pagesize=A4,
-        topMargin=6.5*cm,
+        topMargin=2*cm,
         bottomMargin=2.0*cm,
         leftMargin=2.0*cm,
         rightMargin=2.0*cm,
