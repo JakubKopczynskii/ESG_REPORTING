@@ -201,7 +201,7 @@ def _controversy_table(controversies: list, styles: dict) -> Table:
     for c in controversies[:15]:
         rows.append([
             Paragraph(c["severity"], ParagraphStyle("sev", fontSize=8, alignment=TA_CENTER, fontName="Helvetica-Bold")),
-            Paragraph(c["category"], styles["body"]),
+            Paragraph(c["category"],  ParagraphStyle("Cat", fontSize=7, alignment=TA_CENTER, fontName="Helvetica-Bold")),
             Paragraph(c["title"][:120], styles["body"]),
             Paragraph(c.get("source", "Web")[:40], styles["evidence"]),
         ])
