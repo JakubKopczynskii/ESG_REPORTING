@@ -263,6 +263,57 @@ def score_color(score: float) -> str:
 def risk_color(risk: str) -> str:
     return {"LOW": "#00C896", "MEDIUM": "#F5A623", "HIGH": "#E05C5C", "CRITICAL": "#FF4D4F"}.get(risk, "#F5A623")
 
+
+def infer_audit_progress(logs: list[dict], status: str) -> tuple[list[str], float]:
+    """Infer stage completion and progress from backend audit log messages."""
+    if status == "queued":
+        return ["active", "wait", "wait", "wait"], 0.05
+
+    text = " ".join(entry.get("message", "").lower() for entry in logs)
+    materiality_done = "materiality analysis complete" in text or "loaded report text" in text
+    pipeline_started = "running the full multi-agent esg audit pipeline" in text
+    scientific_skipped = "skipping scientific verifier" in text
+    scientific_started = "scientific verification" in text or "cross-referencing satellite data" in text
+    audit_complete = "ai agents completed analysis and generated results" in text
+
+    stage_status = ["wait", "wait", "wait", "wait"]
+    stage_status[0] = "done" if materiality_done else "active"
+
+    if materiality_done:
+        if pipeline_started:
+            stage_status[1] = "done"
+        else:
+            stage_status[1] = "active"
+
+    if scientific_skipped:
+        stage_status[2] = "done"
+    elif scientific_started:
+        stage_status[2] = "active"
+
+    if audit_complete:
+        stage_status[2] = "done"
+        stage_status[3] = "done"
+    elif stage_status[1] == "done" and stage_status[2] == "done":
+        stage_status[3] = "active"
+    elif stage_status[1] == "done" and stage_status[2] != "active":
+        stage_status[3] = "active"
+
+    if audit_complete:
+        progress = 0.98
+    elif stage_status[3] == "active":
+        progress = 0.8
+    elif stage_status[2] == "active":
+        progress = 0.6
+    elif stage_status[1] == "active":
+        progress = 0.35
+    elif stage_status[0] == "active":
+        progress = 0.15
+    else:
+        progress = 0.25 if stage_status[1] == "done" else 0.1
+
+    return stage_status, progress
+
+
 def api_post(path: str, **kwargs):
     try:
         r = httpx.post(f"{BACKEND_URL}{path}", timeout=60, **kwargs)
@@ -579,7 +630,7 @@ elif "Results Dashboard" in page:
                 "Cross-referencing satellite data...",
                 "Computing score & generating PDF...",
             ]
-            step_status = ["done", "active", "wait", "wait"]
+            step_status, progress_value = infer_audit_progress(job.get("pipeline_logs", []), status)
 
             cols = st.columns(4)
             for i, col in enumerate(cols):
@@ -597,9 +648,11 @@ elif "Results Dashboard" in page:
                     """, unsafe_allow_html=True)
 
             st.markdown("")
-            render_audit_log(job.get("pipeline_logs", []), title="What the AI is doing")
-            progress_bar = st.progress(0.3 if status == "running" else 0.05)
+            progress_bar = st.progress(progress_value)
             st.caption(f"Job ID: `{job_id}` · Status: **{status}**")
+
+        st.markdown("---")
+        render_audit_log(job.get("pipeline_logs", []), title="What the AI is doing")
 
         time.sleep(4)
         st.rerun()
@@ -615,7 +668,6 @@ elif "Results Dashboard" in page:
                 st.markdown(f"- {err}")
 
         status_placeholder.empty()
-        render_audit_log(job.get("pipeline_logs", []), title="Audit activity summary")
         scorecard = job.get("scorecard", {})
 
         if not scorecard:
@@ -790,6 +842,9 @@ elif "Results Dashboard" in page:
                     )
             except Exception as e:
                 st.warning(f"Could not fetch PDF: {e}")
+
+        st.markdown("---")
+        render_audit_log(job.get("pipeline_logs", []), title="Audit activity summary")
 
 
 # ─── Page: Job History ────────────────────────────────────────────────────────
