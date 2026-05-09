@@ -29,27 +29,56 @@ from tools.pdf_generator import generate_pdf_report
 # ─── Wrapper nodes ────────────────────────────────────────────────────────────
 
 def node_materiality(state: AgentState) -> AgentState:
-    return run_materiality_agent(state)
+    logger = state.get("logger")
+    if logger:
+        logger("Starting materiality analysis...")
+    result = run_materiality_agent(state)
+    if logger:
+        logger("Materiality analysis completed.")
+    return result
 
 def node_scraper(state: AgentState) -> AgentState:
-    return run_scraper_agent(state)
+    logger = state.get("logger")
+    if logger:
+        logger("Starting web scraping for controversies...")
+    result = run_scraper_agent(state)
+    if logger:
+        logger("Web scraping completed.")
+    return result
 
 def node_scientific(state: AgentState) -> AgentState:
-    return run_scientific_verifier(state)
+    logger = state.get("logger")
+    if logger:
+        logger("Starting scientific verification...")
+    result = run_scientific_verifier(state)
+    if logger:
+        logger("Scientific verification completed.")
+    return result
 
 def node_synthesizer(state: AgentState) -> AgentState:
-    return run_synthesizer(state)
+    logger = state.get("logger")
+    if logger:
+        logger("Starting scorecard synthesis...")
+    result = run_synthesizer(state)
+    if logger:
+        logger("Scorecard synthesis completed.")
+    return result
 
 def node_pdf(state: AgentState) -> AgentState:
     """Generate the final PDF report."""
+    logger = state.get("logger")
+    if logger:
+        logger("Generating final PDF report...")
     if state.get("scorecard"):
         try:
             pdf_path = generate_pdf_report(cast(IntegrityScorecard, state["scorecard"]))
             state["pdf_path"] = pdf_path
-            print(f"[PDFGenerator] Report saved to {pdf_path}")
+            if logger:
+                logger(f"PDF report generated: {pdf_path}")
         except Exception as e:
             error_message = f"PDF generation failed: {e}"
-            print(f"[PDFGenerator] {error_message}")
+            if logger:
+                logger(error_message)
             state["errors"] = state.get("errors", []) + [error_message]
             raise
     return state
@@ -76,11 +105,7 @@ def build_graph() -> Any:
     # Wire edges
     graph.add_edge(START, "materiality")
     graph.add_edge("materiality", "scraper")
-    graph.add_conditional_edges(
-        "scraper",
-        should_continue_after_scraper,
-        {"scientific": "scientific", "synthesizer": "synthesizer"},
-    )
+    graph.add_edge("scraper", "scientific")
     graph.add_edge("scientific", "synthesizer")
     graph.add_edge("synthesizer", "pdf_gen")
     graph.add_edge("pdf_gen", END)
@@ -103,6 +128,8 @@ def run_audit(
     report_text: str,
     report_year: str = "2025",
     industry_sector: str = "General",
+    logger=None,
+    job_id=None,
 ) -> AgentState:
     """
     Public API: run the full ESG audit pipeline.
@@ -121,6 +148,8 @@ def run_audit(
         errors=[],
         scorecard=None,
         pdf_path=None,
+        logger=logger,
+        job_id=job_id,
     )
 
     graph = get_graph()

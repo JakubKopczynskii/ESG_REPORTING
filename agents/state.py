@@ -3,7 +3,7 @@ Shared state definitions for the ESG Auditor LangGraph pipeline.
 All agents read from and write to this state object.
 """
 
-from typing import TypedDict, Optional, Annotated
+from typing import TypedDict, Optional, Annotated, Callable
 from langgraph.graph.message import add_messages
 
 
@@ -96,3 +96,7 @@ class AgentState(TypedDict):
     # Final output
     scorecard: Optional[IntegrityScorecard]
     pdf_path: Optional[str]
+
+    # Logging
+    logger: Optional[Callable[[str], None]]  # callable for logging
+    job_id: Optional[str]

@@ -68,7 +68,10 @@ Evaluate whether these disclosures are present in the excerpt. Return JSON only.
     ]
     try:
         response = llm.invoke(messages)
-        raw = response.content.strip()
+        content = response.content
+        if not isinstance(content, str):
+            raise ValueError("LLM response content is not a string")
+        raw = content.strip()
         # Strip any accidental markdown fences
         raw = re.sub(r"```json\s*|\s*```", "", raw).strip()
         return json.loads(raw)
@@ -92,7 +95,7 @@ def run_materiality_agent(state: AgentState) -> AgentState:
     state["current_step"] = "materiality"
 
     llm = ChatOllama(
-        model=os.getenv("OLLAMA_MODEL", "qwen2.5:3b"),
+        model=os.getenv("OLLAMA_MODEL", "gpt-oss:20b"),
         base_url=os.getenv("OLLAMA_BASE_URL", "http://localhost:11434"),
         temperature=0.1,
     )
@@ -103,11 +106,14 @@ def run_materiality_agent(state: AgentState) -> AgentState:
 
     results: list[MaterialityResult] = []
 
+    print(f"[MaterialityAgent] Processing {len(SASB_GENERAL_TOPICS)} topics...")
+
     for topic_key, topic_info in SASB_GENERAL_TOPICS.items():
         print(f"  → Evaluating: {topic_info['name']}")
 
         # Skip if not even mentioned (fast path)
         if not _topic_present_in_text(text_lower, topic_info["keywords"]):
+            print(f"    Skipping {topic_key}: no keywords found")
             results.append(MaterialityResult(
                 topic=topic_key,
                 present=False,
@@ -123,6 +129,8 @@ def run_materiality_agent(state: AgentState) -> AgentState:
             ))
             continue
 
+        print(f"    Keywords found for {topic_key}, calling LLM...")
+
         # Find most relevant chunk(s)
         best_chunk = max(
             chunks,
@@ -135,6 +143,8 @@ def run_materiality_agent(state: AgentState) -> AgentState:
             topic_info["required_disclosures"],
             best_chunk,
         )
+
+        print(f"    LLM result for {topic_key}: present={llm_result.get('present', 'N/A')}")
 
         evidence = []
         if llm_result.get("evidence_excerpt"):

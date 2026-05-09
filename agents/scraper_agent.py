@@ -53,11 +53,27 @@ Return ONLY valid JSON:
 }"""
 
 
-from duckduckgo_search import AsyncDDGS
+# DuckDuckGo is optional - gracefully continue without it
+try:
+    from duckduckgo_search import AsyncDDGS  # type: ignore
+    HAS_DDGS = True
+except ImportError:
+    HAS_DDGS = False
+    # Fallback class to prevent type errors
+    class AsyncDDGS:  # type: ignore
+        async def __aenter__(self):
+            return self
+        async def __aexit__(self, *args):
+            pass
+        def news(self, query, max_results):
+            return []
 
 async def _fetch_duckduckgo(company: str, keyword: str, client: httpx.AsyncClient) -> list[dict]:
-    """Use DuckDuckGo News Search to find actual controversies."""
+    """Use DuckDuckGo News Search to find actual controversies (optional)."""
     results = []
+    if not HAS_DDGS:
+        return results  # Skip silently if duckduckgo-search not available
+    
     try:
         query = f"{company} {keyword}"
         # Using the async version of the DuckDuckGo scraper
@@ -170,7 +186,7 @@ def run_scraper_agent(state: AgentState) -> AgentState:
     serpapi_key = os.getenv("SERPAPI_KEY") or None
 
     llm = ChatOllama(
-        model=os.getenv("OLLAMA_MODEL", "qwen2:1.5b"),
+        model=os.getenv("OLLAMA_MODEL", "gpt-oss:20b"),
         base_url=os.getenv("OLLAMA_BASE_URL", "http://localhost:11434"),
         temperature=0.1,
     )

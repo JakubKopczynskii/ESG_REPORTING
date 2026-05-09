@@ -175,6 +175,8 @@ st.markdown("""
     border-radius: 16px;
     padding: 18px;
     margin: 18px 0;
+    max-height: 400px; 
+    overflow-y: auto;
   }
   .log-entry {
     display: flex;
@@ -270,36 +272,49 @@ def infer_audit_progress(logs: list[dict], status: str) -> tuple[list[str], floa
         return ["active", "wait", "wait", "wait"], 0.05
 
     text = " ".join(entry.get("message", "").lower() for entry in logs)
-    materiality_done = "materiality analysis complete" in text or "loaded report text" in text
-    pipeline_started = "running the full multi-agent esg audit pipeline" in text
-    scientific_skipped = "skipping scientific verifier" in text
-    scientific_started = "scientific verification" in text or "cross-referencing satellite data" in text
+
+    materiality_started = "starting materiality analysis" in text
+    materiality_done = "materiality analysis completed" in text
+    scraper_started = "starting web scraping" in text or "web scraping" in text
+    scraper_done = "web scraping completed" in text
+    scientific_started = "starting scientific verification" in text or "scientific verification" in text
+    scientific_done = "scientific verification completed" in text
+    synthesizer_started = "starting scorecard synthesis" in text or "scorecard synthesis" in text
+    synthesizer_done = "scorecard synthesis completed" in text
+    pdf_started = "generating final pdf report" in text or "pdf report generated" in text
     audit_complete = "ai agents completed analysis and generated results" in text
 
     stage_status = ["wait", "wait", "wait", "wait"]
-    stage_status[0] = "done" if materiality_done else "active"
 
+    # Materiality stage
     if materiality_done:
-        if pipeline_started:
-            stage_status[1] = "done"
-        else:
-            stage_status[1] = "active"
+        stage_status[0] = "done"
+    elif materiality_started or status == "running":
+        stage_status[0] = "active"
 
-    if scientific_skipped:
+    # Scraper stage
+    if scraper_done:
+        stage_status[1] = "done"
+    elif stage_status[0] == "done" and (scraper_started or "running the full multi-agent esg audit pipeline" in text):
+        stage_status[1] = "active"
+
+    # Scientific verifier stage
+    if scientific_done:
         stage_status[2] = "done"
-    elif scientific_started:
+    elif stage_status[1] == "done" and scientific_started:
         stage_status[2] = "active"
 
-    if audit_complete:
-        stage_status[2] = "done"
+    # Synthesizer/PDF stage
+    if synthesizer_done or audit_complete:
         stage_status[3] = "done"
-    elif stage_status[1] == "done" and stage_status[2] == "done":
-        stage_status[3] = "active"
-    elif stage_status[1] == "done" and stage_status[2] != "active":
+    elif stage_status[2] == "done" and (synthesizer_started or pdf_started):
         stage_status[3] = "active"
 
+    progress = 0.05
     if audit_complete:
         progress = 0.98
+    elif stage_status[3] == "done":
+        progress = 0.95
     elif stage_status[3] == "active":
         progress = 0.8
     elif stage_status[2] == "active":
@@ -308,8 +323,8 @@ def infer_audit_progress(logs: list[dict], status: str) -> tuple[list[str], floa
         progress = 0.35
     elif stage_status[0] == "active":
         progress = 0.15
-    else:
-        progress = 0.25 if stage_status[1] == "done" else 0.1
+    elif stage_status[0] == "done":
+        progress = 0.3
 
     return stage_status, progress
 
@@ -350,7 +365,7 @@ def render_audit_log(logs: list[dict], title: str = "AI Activity Log"):
         return
 
     entries = []
-    for entry in logs[-6:]:
+    for entry in logs:
         badge_class = {
             "info": "log-info",
             "warning": "log-warning",
@@ -358,7 +373,7 @@ def render_audit_log(logs: list[dict], title: str = "AI Activity Log"):
         }.get(entry.get("level", "info"), "log-info")
         ts = entry.get("timestamp", "")
         message = entry.get("message", "")
-        entries.append(f"""
+        entries.append("""
         <div class="log-entry">
           <span class="log-badge {badge_class}"></span>
           <div>
@@ -366,9 +381,9 @@ def render_audit_log(logs: list[dict], title: str = "AI Activity Log"):
             <div class="log-text">{message}</div>
           </div>
         </div>
-        """)
+        """.format(badge_class=badge_class, ts=ts, message=message))
 
-    st.markdown(f'<div class="audit-log">{"".join(entries)}</div>', unsafe_allow_html=True)
+    st.markdown('<div class="audit-log">{}</div>'.format("".join(entries)), unsafe_allow_html=True)
 
 # ─── Gauge chart ──────────────────────────────────────────────────────────────
 

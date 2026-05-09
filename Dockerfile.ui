@@ -45,7 +45,7 @@ echo "╚═══════════════════════�
 echo ""
 exec streamlit run ui/app.py 2>&1 | sed 's|http://0.0.0.0:8501|http://localhost:8501|g'
 EOF
-RUN chmod +x /app/entrypoint.sh
+RUN sed -i 's/\r$//' /app/entrypoint.sh && chmod +x /app/entrypoint.sh
 
 EXPOSE 8501
 

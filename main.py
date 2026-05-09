@@ -92,18 +92,23 @@ def _run_in_thread(
 
         report_lower = text.lower()
         if any(kw in report_lower for kw in ["emissions", "co2", "carbon", "methane"]):
-            _record_job_log(job_id, "Materiality analysis complete. Preparing scientific verification.")
+            pass  # Will be logged by pipeline
         else:
-            _record_job_log(job_id, "Materiality analysis complete. No emissions keywords detected; skipping scientific verifier.")
+            pass  # Will be logged by pipeline
 
         _record_job_log(job_id, "Running the full multi-agent ESG audit pipeline.")
 
         # 2. Run the audit pipeline
+        def logger_func(message: str):
+            _record_job_log(job_id, message)
+        
         result = run_audit(
             company_name=company_name,
             report_text=text,
             report_year=report_year,
             industry_sector=industry_sector,
+            logger=logger_func,
+            job_id=job_id,
         )
         _record_job_log(job_id, "AI agents completed analysis and generated results.")
         _jobs[job_id]["status"] = "completed"

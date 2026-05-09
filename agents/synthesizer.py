@@ -194,7 +194,7 @@ def run_synthesizer(state: AgentState) -> AgentState:
     state["current_step"] = "synthesizer"
 
     llm = ChatOllama(
-        model=os.getenv("OLLAMA_MODEL", "qwen2:1.5b"),
+        model=os.getenv("OLLAMA_MODEL", "gpt-oss:20b"),
         base_url=os.getenv("OLLAMA_BASE_URL", "http://localhost:11434"),
         temperature=0.3,
         num_predict=500,  # Limit response length to speed up
