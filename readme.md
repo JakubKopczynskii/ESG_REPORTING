@@ -126,6 +126,35 @@ Creates professional, McKinsey-quality PDF scorecard with clean layout, color-co
 
 ---
 
+## 💪 Strengths & Weaknesses
+
+### Strengths
+✅ **100% Local & Private** — No data leaves your infrastructure; compliant with data governance policies  
+✅ **Multi-Dimensional Verification** — Combines framework compliance, real-time news, and satellite data for robust greenwashing detection  
+✅ **Transparent & Verifiable** — Every claim is cross-referenced with evidence sources, audit trails included in PDF  
+✅ **Framework Aligned** — Built on SASB and GRI standards, recognized by institutional investors  
+✅ **Automated & Fast** — Audits complete in minutes vs. weeks for manual reviews  
+✅ **Docker Ready** — Single `docker compose up` for reproducible deployment across teams  
+✅ **Flexible Access** — Web dashboard for non-technical users, REST API for automation, Swagger docs for developers  
+
+### Weaknesses & Limitations
+⚠️ **Resource Intensive** — Requires 8 GB RAM minimum; GPU recommended for speed  
+⚠️ **Slow Cold Start** — First run downloads LLM model (~3 GB, takes 5-10 minutes)  
+⚠️ **News Source Dependency** — Controversy detection relies on web scraping; may miss regional/niche issues  
+⚠️ **Satellite Data Gaps** — Limited to publicly available NASA/NOAA datasets; gaps in coverage for smaller companies  
+⚠️ **Local LLM Accuracy** — Smaller local models may have higher false positives/negatives vs. enterprise APIs (GPT-4, Claude)  
+⚠️ **Input Quality Matters** — Audit quality depends on completeness of ESG report; sparse reports yield weaker analysis  
+⚠️ **Framework-Scoped** — Focuses on SASB/GRI; other frameworks (ISSB, TCFD) not fully integrated  
+⚠️ **Setup Complexity** — Docker knowledge recommended; non-technical users may struggle with initial configuration  
+
+### Best Use Cases
+- **Large organizations** with dedicated infrastructure and ESG teams  
+- **Investors & analysts** needing rapid, reproducible ESG audits across portfolios  
+- **Consultants** requiring transparent, defensible scoring methodologies  
+- **Regulatory compliance** teams needing audit trails and evidence documentation  
+
+---
+
 ## How to Use
 
 ### Option 1: Web Dashboard (Easiest)
